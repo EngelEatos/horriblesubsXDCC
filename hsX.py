@@ -3,14 +3,15 @@ import os
 import logging
 import xdccParser
 from subprocess import call
+from random import randint
+import json
 
-
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 BASEURL = "http://horriblesubs.info"
 ANIME_FOLDER = "G:\\summer"
 DEFAULT_RES = "720p"
-#DEFAULT_BOT = "CR-RALEIGH|NEW"
+DEFAULT_BOT = "CR-RALEIGH|NEW"
 
 def get_local_animes():
     """Return the folder/animes from ANIME_FOLDER."""
@@ -34,25 +35,43 @@ def get_diff_episodes(packages, local):
     package_eps = set([p[3][2] for p in packages])
     local_eps = [l[2] for l in local]
     diff_eps = list(set(package_eps) - set(local_eps))
-    logging.debug("package: " + str(package_eps))
-    logging.debug("local: " + str(local_eps))
+    logging.info("package: " + str(package_eps))
+    logging.info("local: " + str(local_eps))
     logging.info("diff: " +  str(diff_eps))
     return diff_eps
 
-def download():
-    json = '{"todo":[{"botname" : "CR-RALEIGH|NEW","package": 5,"folder": "/home/chaos/output/"},{"botname" : "CR-RALEIGH|NEW","package": 160,"folder": "/home/chaos/output/test/"}]}';
-    call(["node", "irc-client2.js", json])
+def get_episode_package(packages, episode):
+    selected = []
+    for p in packages:
+        if p[3][2] == episode:
+            if p[0] == DEFAULT_BOT:
+                return p
+            else:
+                selected.append(p)
+    return selected[randint(0, len(selected)-1)]
+
+def printJson(data):
+    parsed = json.loads(data)
+    print(json.dumps(parsed, indent=4, sort_keys=True))
 
 def main():
     """Main"""
     animes = get_local_animes()
+    jList = []
     for show in animes:
+        obj = {}
         print(show)
         packages = xdccParser.search(show, DEFAULT_RES)
         local = get_local_episodes(show)
-        diff = get_diff_episodes(packages, local)
-        print(diff)
-        break
+        for ep in get_diff_episodes(packages, local):
+            package = get_episode_package(packages, ep)
+            obj["botname"] = package[0]
+            obj["package"] = package[1]
+            obj["folder"] = os.path.join(ANIME_FOLDER, show)
+            jList.append(obj)
+    json_data = json.dumps({ "todo":jList})
+    call(["node", "irc-client.js", json_data])
+
 
 if __name__ == '__main__':
     main()
