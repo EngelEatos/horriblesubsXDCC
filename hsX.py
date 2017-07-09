@@ -4,12 +4,13 @@ import logging
 import xdccParser
 from subprocess import call
 from random import randint
+from termcolor import colored
 import json
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 BASEURL = "http://horriblesubs.info"
-ANIME_FOLDER = "G:\\summer"
+ANIME_FOLDER = "/run/media/chaos/Animes/summer/"
 DEFAULT_RES = "720p"
 DEFAULT_BOT = "CR-RALEIGH|NEW"
 
@@ -35,9 +36,8 @@ def get_diff_episodes(packages, local):
     package_eps = set([p[3][2] for p in packages])
     local_eps = [l[2] for l in local]
     diff_eps = list(set(package_eps) - set(local_eps))
-    logging.info("package: " + str(package_eps))
-    logging.info("local: " + str(local_eps))
-    logging.info("diff: " +  str(diff_eps))
+    logging.debug("package: " + str(package_eps))
+    logging.debug("local: " + str(local_eps))
     return diff_eps
 
 def get_episode_package(packages, episode):
@@ -63,15 +63,29 @@ def main():
         print(show)
         packages = xdccParser.search(show, DEFAULT_RES)
         local = get_local_episodes(show)
-        for ep in get_diff_episodes(packages, local):
-            package = get_episode_package(packages, ep)
-            obj["botname"] = package[0]
-            obj["package"] = package[1]
-            obj["folder"] = os.path.join(ANIME_FOLDER, show)
-            jList.append(obj)
+        diff = get_diff_episodes(packages, local)
+        if len(diff) > 0:
+            print(colored('missing: ' + str(diff), 'red'))
+            for ep in diff:
+                package = get_episode_package(packages, ep)
+                obj["botname"] = package[0]
+                obj["package"] = package[1]
+                obj["folder"] = os.path.join(ANIME_FOLDER, show)
+                jList.append(obj)
+        else:
+            print(colored('up to date', 'green'))
+        print()
+    if len(jList) == 0:
+        return
     json_data = json.dumps({ "todo":jList})
     call(["node", "irc-client.js", json_data])
+    fix()
 
+def fix():
+    for root, dirs, files in os.walk(ANIME_FOLDER):
+        for file in files:
+            if file.endsWith(".mkv\"") and file.startsWith("\""):
+                os.rename(file, file[1:-1])
 
 if __name__ == '__main__':
     main()
