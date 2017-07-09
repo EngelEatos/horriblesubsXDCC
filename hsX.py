@@ -1,47 +1,54 @@
+"""Calculates diff of local and online Animes episodes & download these via XDCC"""
 import os
-import re
+import logging
 import xdccParser
-import showParser
+#from Naked.toolshed.shell import execute_js
 
-baseUrl = "http://horriblesubs.info"
-animeFolder = "G:\\summer"
-defaultRes = "720p"
-defaultBot = "CR-RALEIGH|NEW"
 
-def getLocalAnimes():
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+BASEURL = "http://horriblesubs.info"
+ANIME_FOLDER = "G:\\summer"
+DEFAULT_RES = "720p"
+#DEFAULT_BOT = "CR-RALEIGH|NEW"
+
+def get_local_animes():
+    """Return the folder/animes from ANIME_FOLDER."""
     animes = []
-    for dir in os.listdir(animeFolder):
-        if os.path.isdir(os.path.join(animeFolder, dir)):
-            animes.append(dir)
+    for folder in os.listdir(ANIME_FOLDER):
+        if os.path.isdir(os.path.join(ANIME_FOLDER, folder)):
+            animes.append(folder)
     return animes
 
-def getLocalEpisodes(name):
+def get_local_episodes(name):
+    """Return a list of files of a anime-folder inside ANIME_FOLDER"""
     episodes = []
-    path = os.path.join(animeFolder, name)
+    path = os.path.join(ANIME_FOLDER, name)
     for file in os.listdir(path):
         if os.path.isfile(os.path.join(path, file)):
             episodes.append(xdccParser.parseName(file))
     return episodes
 
-def getmissingEpisodes(packages, local):
-    pEps = set([p[3][2] for p in packages])
-    lEps = [l[2] for l in local]
-    print("package: " + str(pEps))
-    print("local: " + str(lEps))
-    mEps = list(set(pEps) - set(lEps))
-    return mEps
+def get_diff_episodes(packages, local):
+    """Return the difference between the folder of packages and local"""
+    package_eps = set([p[3][2] for p in packages])
+    local_eps = [l[2] for l in local]
+    diff_eps = list(set(package_eps) - set(local_eps))
+    logging.debug("package: " + str(package_eps))
+    logging.debug("local: " + str(local_eps))
+    logging.info("diff: " +  str(diff_eps))
+    return diff_eps
 
 def main():
-    animes = getLocalAnimes()
+    """Main"""
+    animes = get_local_animes()
     for show in animes:
         print(show)
-        packages = xdccParser.search(show, defaultRes)
-        local = getLocalEpisodes(show)
-        print(getmissingEpisodes(packages, local))
-
-def test():
-    print(parseName("[HorribleSubs] Knight's & Magic - 01 [720p].mkv"))
-
+        packages = xdccParser.search(show, DEFAULT_RES)
+        local = get_local_episodes(show)
+        diff = get_diff_episodes(packages, local)
+        print(diff)
+        break
 
 if __name__ == '__main__':
     main()
