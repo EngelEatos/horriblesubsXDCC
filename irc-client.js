@@ -1,30 +1,74 @@
-//irc.rizon.net #horriblesubs Botname packageNr, downloadDir
+// Get dependencies
+var irc = require('xdcc').irc;
+var ProgressBar = require('ascii-progress');
+// Set IRC configuration
+var user = 'engelbot';
 var server = "irc.rizon.net";
 var port = 6667;
 var channel = "#horriblesubs";
-
 //
-var irc = require('xdcc').irc;
-var ProgressBar = require('progress');
-var progress, arg = process.argv;
+var progress;
+var queue = [];
+var json = process.argv[2];
+var hostUser;
+var last = 0;
 
-var user = 'user_' + Math.random().toString(36).substr(2);
-var bar = 'Downloading... [:bar] :percent, :etas remaining';
-var client = new irc.Client(server, user, { channels: [ channel ], userName: user, realName: user });
-var last = 0, handle = received => { progress.tick(received - last); last = received; };
-
-client.on('join', (channel, nick) => nick == user && download(client, arg[2]));
-client.on('xdcc-connect', meta => progress = new ProgressBar(bar, {incomplete: ' ', total: meta.length, width: 40}));
-client.on('xdcc-data', handle).on('xdcc-end', r => { handle(r); process.exit(); } ).on('error', m => console.error(m));
-
-function download(client, json){
-  var obj = JSON.parse(json);
-  var todo = obj['todo'];
-  for(var i in todo){
-    var task = todo[i];
-    var bot = task['botname'];
-    var pkg = task['package'];
-    var folder = task['folder'];
-    client.getXdcc(bot, 'xdcc send #' + pkg, folder);
-  }
+var todo = JSON.parse(json)['todo'];
+for(var i in todo){
+  var task = todo[i];
+  queue.push(task);
 }
+
+var client = new irc.Client('irc.rizon.net', user, {
+  channels: ['#horriblesubs'],
+  userName: user,
+  realName: user
+});
+console.log("-- CONNECTING");
+
+function nextTask(){
+  if (queue.length == 0) {
+    client.disconnect()
+    process.exit(0);
+  }
+  var task = queue.shift();
+  last,received = 0;
+  progress = null;
+  hostUser = task['botname'];
+  client.getXdcc(task['botname'], 'xdcc send #' + task['package'], task['folder']);
+}
+
+client.on('join', function (channel, nick, message) {
+  if(nick !== user) return;
+  console.log('-- Joined ' + channel);
+  nextTask();
+});
+
+client.on('xdcc-connect', function(meta) {
+  console.log('Downloading: ' + meta.file);
+  progress = new ProgressBar({
+    schema: '[:bar] :current/:total :percent :etas',
+    total: meta.length,
+    current: 0
+  });
+});
+
+client.on('xdcc-data', function(received) {
+  progress.tick(received - last);
+  last = received;
+});
+
+client.on('xdcc-end', function(received) {
+  received, last = 0;
+  nextTask();
+});
+
+client.on('notice', function(from, to, message) {
+  if (to == user && from == hostUser) {
+    console.log("[notice]", message);
+  }
+});
+
+client.on('error', function(message) {
+  console.error(message);
+});

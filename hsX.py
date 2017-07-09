@@ -2,7 +2,7 @@
 import os
 import logging
 import xdccParser
-#from Naked.toolshed.shell import execute_js
+from subprocess import call
 
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -38,6 +38,10 @@ def get_diff_episodes(packages, local):
     logging.debug("local: " + str(local_eps))
     logging.info("diff: " +  str(diff_eps))
     return diff_eps
+
+def download():
+    json = '{"todo":[{"botname" : "CR-RALEIGH|NEW","package": 5,"folder": "/home/chaos/output/"},{"botname" : "CR-RALEIGH|NEW","package": 160,"folder": "/home/chaos/output/test/"}]}';
+    call(["node", "irc-client2.js", json])
 
 def main():
     """Main"""
