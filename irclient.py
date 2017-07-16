@@ -1,9 +1,7 @@
 import sys
 import socket
-import struct
 import string
 import threading
-import time
 import ipaddress
 
 HOST = "irc.rizon.net"
@@ -88,7 +86,6 @@ def recv():
                     print(line[1] + " - " + line[0] + ": " + stringbuild(line, 4, len(line)) )
             elif(line[1] == "366"):
                 print("sending PRIVMSG")
-
                 send("PRIVMSG Ginpachi-Sensei :xdcc send #1123\r\n")
             elif(line[1] == "PRIVMSG" and "DCC" in line[3]):
                 length = len(line)
