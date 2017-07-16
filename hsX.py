@@ -10,7 +10,7 @@ import json
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 BASEURL = "http://horriblesubs.info"
-ANIME_FOLDER = "/run/media/chaos/Animes/summer/"
+ANIME_FOLDER = "G:/summer/"
 DEFAULT_RES = "720p"
 DEFAULT_BOT = "CR-RALEIGH|NEW"
 
