@@ -5,22 +5,25 @@ import threading
 import ipaddress
 import json
 import os
+import queue
+from tqdm import tqdm
 
 HOST = "irc.rizon.net"
 PORT = 6667
-NICK = "testtes6"
-IDENT = "testes6"
-REALNAME = "testtes6"
+NICK = "testtest6"
+IDENT = "testest6"
+REALNAME = "testtest6"
 SERVER = "rizon"
 DOWNLOAD_DIR = "/home/chaos/tmp"
 
 class IRCclient():
-    def __init__(self, host, port, user, channel):
+    def __init__(self, host, port, user, channel, json):
         self.host = host
         self.port = port
         self.user = user
         self.channel = channel
         self.sock = socket.socket()
+        self.json = json
 
     def send(s, msg):
         print(msg+"\r\n")
@@ -63,19 +66,34 @@ class IRCclient():
         if(len(line) > 1):
             return (line[1] == "332")
 
-    def acceptTCP(s,id, ip, port, filename, size):
+    def progress(s, count, total, suffix=''):
+        bar_len = 60
+        filled_len = int(round(bar_len * count / float(total)))
+
+        percents = round(100.0 * count / float(total), 1)
+        bar = '=' * filled_len + '-' * (bar_len - filled_len)
+
+        sys.stdout.write('[%s] %s%s ...%s\r' % (bar, percents, '%', suffix))
+        sys.stdout.flush()
+
+    def acceptTCP(s, ip, port, filename, size):
         f = open(os.path.join(DOWNLOAD_DIR, filename), 'wb')
+        print(os.path.join(DOWNLOAD_DIR, filename))
         tcp_socket = socket.socket()
         tcp_socket.connect( (ip, port) )
-        print("tid: " + str(id) + " - SOCKET connected to %s:%s" % (ip, port) )
+        #tcp_socket = socket.create_connection( (ip, port))
+        print("SOCKET connected to %s:%s" % (ip, port) )
         current = 0
-        while(current != size):
-            l = tcp_socket.recv(1024)
-            current += len(l)
-            print("tid: " + str(id) + " - Receiving: " + s.sizeof_fmt(current) + "/" + s.sizeof_fmt(int(size)))
-            f.write(l)
+        with tqdm(total=size, unit='B', unit_scale=True) as pbar:
+            while(current != size):
+                #s.progress(current, size, filename)
+                l = tcp_socket.recv(1024)
+                current += len(l)
+                pbar.update(len(l))
+                #print(Receiving: " + s.sizeof_fmt(current) + "/" + s.sizeof_fmt(int(size)))
+                f.write(l)
         f.close()
-        print("tid: " + str(id) + " - DONE")
+        print("DONE: " + filename)
         tcp_socket.close()
 
     def getBotname(s):
@@ -92,9 +110,12 @@ class IRCclient():
             readbuffer = readbuffer + s.sock.recv(1024).decode("utf-8")
             temp = readbuffer.split("\n")
             readbuffer = temp.pop()
+            print(temp)
             for line in temp:
                 line = line.rstrip()
                 line = line.split()
+                if(len(line) < 1):
+                    return
                 res = callback(line)
                 if(res):
                     return res
@@ -102,14 +123,12 @@ class IRCclient():
                     s.send("PONG %s\r\n" % line[1])
     def process(s):
         #Ginpachi-Sensei xdcc send #1123
-        #request
-        #json = '{"todo":[{"botname" : "CR-RALEIGH|NEW","package": 5,"folder": "/home/chaos/output/"},{"botname" : "CR-RALEIGH|NEW","package": 160,"folder": "/home/chaos/output/test/"}]}';
-        json_data = '{"Ginpachi-Sensei" : [1123,80], "CR-RALEIGH|NEW" : [5]}'
-        j = json.loads(json_data)
-        for botname in j:
-            packages = j[botname]
-            for i in range(len(packages)):
-                s.privmsg(botname, "xdcc send #" + str(packages[i]))
+        json_data = '{"Ginpachi-Sensei" : [4300,4528,3051,4059]}'
+        #json_data = s.json
+        bots = json.loads(json_data)
+        for bot in bots:
+            for package in bots[bot]:
+                s.privmsg(bot, "xdcc send #" + str(package))
                 line = s.recvCon(s.processCallback)
                 print(line)
                 offerer = line[0][line[0].find('!')+1:]
@@ -121,16 +140,13 @@ class IRCclient():
                     size = int(line[length-1][:-1])
                     filename = s.stringbuild(line, 5, length-3)
                     print("%s %s %s %s" % (ip, port, size, filename))
-                    f = open(filename[1:-1], 'wb')
-                    t = threading.Thread(target=s.acceptTCP, args=[i, ip, port, filename[1:-1], size])
+                    t = threading.Thread(target=s.acceptTCP, args=[ip, port, filename[1:-1], size])
                     t.start()
 
     def processCallback(s, line):
-        print(line)
         if(len(line) >= 4):
             if(line[1] == "PRIVMSG" and "DCC" in line[3]):
                 return line
-
 
     def stringbuild(s, line, start, end):
         result = ""
@@ -145,5 +161,13 @@ class IRCclient():
             num /= 1024.0
         return "%.1f%s%s" % (num, 'Yi', suffix)
 
-irc = IRCclient("irc.rizon.net", 6667, "testbot13", "#horriblesubs")
-irc.connect()
+def main():
+    irc = IRCclient("irc.rizon.net", 6667, "testtest13", "#horriblesubs", "")
+    irc.connect()
+
+def test():
+    irc = IRCclient("irc.rizon.net", 6667, "testtest13", "#horriblesubs")
+    irc.process()
+
+if __name__ == '__main__':
+    main()

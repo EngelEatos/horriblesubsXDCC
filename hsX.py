@@ -68,24 +68,19 @@ def main():
             print(colored('missing: ' + str(diff), 'red'))
             for ep in diff:
                 package = get_episode_package(packages, ep)
-                obj["botname"] = package[0]
-                obj["package"] = package[1]
-                obj["folder"] = os.path.join(ANIME_FOLDER, show)
+                obj[package[0]] = package[1]
+                #obj["botname"] = package[0]
+                #obj["package"] = package[1]
+                #obj["folder"] = os.path.join(ANIME_FOLDER, show)
                 jList.append(obj)
         else:
             print(colored('up to date', 'green'))
         print()
     if len(jList) == 0:
         return
-    json_data = json.dumps({ "todo":jList})
+    json_data = json.dumps({jList})
+    
     call(["node", "irc-client.js", json_data])
-    fix()
-
-def fix():
-    for root, dirs, files in os.walk(ANIME_FOLDER):
-        for file in files:
-            if file.endsWith(".mkv\"") and file.startsWith("\""):
-                os.rename(file, file[1:-1])
 
 if __name__ == '__main__':
     main()
