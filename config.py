@@ -1,4 +1,4 @@
-""" all constants in one file"""
+"""all constants in one file"""
 ## IRC ##
 HOST = "irc.rizon.net"
 PORT = 6667

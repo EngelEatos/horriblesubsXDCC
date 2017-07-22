@@ -1,4 +1,4 @@
-"""Simple ircclient to download anime packages"""
+"""simple ircclient to download anime packages"""
 import sys
 import socket
 import os
@@ -14,8 +14,8 @@ PORT = config.PORT
 USER = config.USER
 CHANNEL = config.CHANNEL
 
-class IRCclient():
-    """IRCclient"""
+class irc_client():
+    """irc-client"""
     def __init__(self, json_data, download_dir):
         """initalize ircclient"""
         self.json_data = json_data

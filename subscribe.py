@@ -1,4 +1,4 @@
-""" generate config file for subscribing animes """
+"""generate config file for subscribing animes """
 import os
 import json
 import showparser
@@ -16,15 +16,13 @@ def decide(i, show):
     while True:
         answer = input("[%s]\tsubscribe to '%s'? [y/n]\t" % (i, show))
         if not answer:
-            return True
-            #continue
+            continue
         answer = answer[0].lower()
-        valid = ["y", "n"]
-        if answer in valid:
+        if answer in ["y", "n"]:
             return answer == "y"
 
 def main():
-    """MAIN"""
+    """main"""
     data = []
     if os.path.isfile(CONFIG):
         os.remove(CONFIG)

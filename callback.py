@@ -1,4 +1,4 @@
-""" all acllback functions for receive-function in one file"""
+"""all acllback functions for receive-function in one file"""
 import sys
 import config
 

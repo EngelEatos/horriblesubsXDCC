@@ -1,4 +1,4 @@
-"""Calculates diff of local and online Animes episodes & download these via XDCC"""
+"""calculates diff of local and online Animes episodes & download these via XDCC"""
 import os
 import logging
 import json
@@ -16,7 +16,7 @@ DEFAULT_RES = config.DEFAULT_RES
 DEFAULT_BOT = config.DEFAULT_BOT
 
 def get_local_animes():
-    """Return the folder/animes from ANIME_FOLDER."""
+    """return the folder/animes from ANIME_FOLDER."""
     animes = []
     for folder in os.listdir(ANIME_FOLDER):
         if os.path.isdir(os.path.join(ANIME_FOLDER, folder)):
@@ -24,7 +24,7 @@ def get_local_animes():
     return animes
 
 def get_local_episodes(name):
-    """Return a list of files of a anime-folder inside ANIME_FOLDER"""
+    """return a list of files of a anime-folder inside ANIME_FOLDER"""
     episodes = []
     path = os.path.join(ANIME_FOLDER, name)
     for file in os.listdir(path):
@@ -33,7 +33,7 @@ def get_local_episodes(name):
     return episodes
 
 def get_diff_episodes(packages, local):
-    """Return the difference between the folder of packages and local"""
+    """return the difference between the folder of packages and local"""
     package_eps = set([p[3][2] for p in packages])
     local_eps = [l[2] for l in local]
     diff_eps = list(set(package_eps) - set(local_eps))
@@ -58,7 +58,7 @@ def print_json(data):
     print(json.dumps(parsed, indent=4, sort_keys=True))
 
 def main():
-    """Main"""
+    """main"""
     animes = get_local_animes()
     result = {}
     for show in animes:
@@ -80,7 +80,7 @@ def main():
     if not result:
         return
     json_data = json.dumps(result)
-    irc = irclient.IRCclient(json_data, ANIME_FOLDER)
+    irc = irclient.irc_client(json_data, ANIME_FOLDER)
     irc.connect()
 
 if __name__ == '__main__':

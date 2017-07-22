@@ -33,7 +33,7 @@ def get_value(pair):
     return pair[pair.find(":")+2:-1] if "\"" in pair else pair[pair.find(":")+1:]
 
 def main():
-    """MAIN"""
+    """main"""
     result = search("Castlevania", "720p")
     for res in result:
         print(res)
