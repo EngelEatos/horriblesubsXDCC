@@ -29,7 +29,7 @@ def get_local_episodes(name):
     path = os.path.join(ANIME_FOLDER, name)
     for file in os.listdir(path):
         if os.path.isfile(os.path.join(path, file)):
-            episodes.append(xdccParser.parse_name(file))
+            episodes.append(xdccparser.parse_name(file))
     return episodes
 
 def get_diff_episodes(packages, local):
@@ -63,7 +63,7 @@ def main():
     result = {}
     for show in animes:
         print(show)
-        packages = xdccParser.search(show, DEFAULT_RES)
+        packages = xdccparser.search(show, DEFAULT_RES)
         local = get_local_episodes(show)
         diff = get_diff_episodes(packages, local)
         if diff:
