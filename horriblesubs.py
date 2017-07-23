@@ -14,6 +14,7 @@ BASEURL = config.BASEURL
 ANIME_FOLDER = config.ANIME_FOLDER
 DEFAULT_RES = config.DEFAULT_RES
 DEFAULT_BOT = config.DEFAULT_BOT
+CONFIG_FILE = config.CONFIG_FILE
 
 def get_local_animes():
     """return the folder/animes from ANIME_FOLDER."""
@@ -23,10 +24,19 @@ def get_local_animes():
             animes.append(folder)
     return animes
 
+def get_subscribed_animes():
+    """return subscribed animes listed in CONFIG_FILE"""
+    animes = []
+    with open(CONFIG_FILE, 'r') as config:
+        animes = json.load(config)
+    return animes
+
 def get_local_episodes(name):
     """return a list of files of a anime-folder inside ANIME_FOLDER"""
     episodes = []
     path = os.path.join(ANIME_FOLDER, name)
+    if not os.path.isdir(path):
+        os.makedirs(path)
     for file in os.listdir(path):
         if os.path.isfile(os.path.join(path, file)):
             episodes.append(xdccparser.parse_name(file))
@@ -59,7 +69,7 @@ def print_json(data):
 
 def main():
     """main"""
-    animes = get_local_animes()
+    animes = get_subscribed_animes() if os.path.isfile(CONFIG_FILE) else get_local_animes()
     result = {}
     for show in animes:
         print(show)

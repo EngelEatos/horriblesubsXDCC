@@ -5,7 +5,7 @@ PORT = 6667
 CHANNEL = "#horriblesubs"
 USER = "engeleatosbot2"
 ## config-file ##
-CONFIG = "anime.json"
+CONFIG_FILE = "anime.json"
 ## horriblesubs ##
 BASEURL = "http://horriblesubs.info"
 ANIME_FOLDER = "G:/summer"

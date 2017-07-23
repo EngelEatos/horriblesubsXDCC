@@ -21,6 +21,7 @@ class irc_client():
         self.json_data = json_data
         self.download_dir = download_dir
         self.sock = socket.socket()
+        self.whois = dict()
 
     def send(self, msg):
         """send message"""
@@ -54,7 +55,7 @@ class irc_client():
 
     def accept_tcp(self, host, port, filename, size):
         """accept incoming tcp offer"""
-        anime = xdccParser.parse_name(filename)[1]
+        anime = xdccparser.parse_name(filename)[1]
         episode_file = open(os.path.join(self.download_dir, anime, filename), 'wb')
         print(os.path.join(self.download_dir, anime, filename))
         tcp_socket = socket.socket()
@@ -74,8 +75,10 @@ class irc_client():
 
     def get_botname(self, bot):
         """get botname"""
-        self.send("WHOIS " + bot)
-        return self.receive(callback.botname_callback)
+        if bot not in self.whois:
+            self.send("WHOIS " + bot)
+            self.whois[bot] = self.receive(callback.botname_callback)
+        return self.whois[bot]
 
     def receive(self, callback_function):
         """receive line from irc-server"""
