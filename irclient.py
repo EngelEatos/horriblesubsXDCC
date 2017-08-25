@@ -56,6 +56,9 @@ class irc_client():
     def accept_tcp(self, host, port, filename, size):
         """accept incoming tcp offer"""
         anime = xdccparser.parse_name(filename)[1]
+        if anime == "Knight_s & Magic":
+            anime = "Knight's & Magic"
+            filename = filename.replace("Knight_s & Magic", anime)
         episode_file = open(os.path.join(self.download_dir, anime, filename), 'wb')
         print(os.path.join(self.download_dir, anime, filename))
         tcp_socket = socket.socket()

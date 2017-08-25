@@ -38,5 +38,11 @@ def main():
     for res in result:
         print(res)
 
+def test():
+    result = search("Knight's & Magic", "720p")
+    for r in result:
+        print(r[2])
+
 if __name__ == '__main__':
-    main()
+    test()
+    #main()

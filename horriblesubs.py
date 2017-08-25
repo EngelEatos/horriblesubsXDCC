@@ -37,19 +37,49 @@ def get_local_episodes(name):
     path = os.path.join(ANIME_FOLDER, name)
     if not os.path.isdir(path):
         os.makedirs(path)
-    for file in os.listdir(path):
-        if os.path.isfile(os.path.join(path, file)):
-            episodes.append(xdccparser.parse_name(file))
+    for ep in os.listdir(path):
+        ep_path = os.path.join(path, ep)
+        if os.path.isfile(ep_path):
+            episodes.append([xdccparser.parse_name(ep), os.stat(ep_path).st_size])
     return episodes
+
+def distinct_packages(packages):
+    """return a distinct list of the packages"""
+    result = []
+    eps = []
+    for p in packages:
+        if p[3][2] not in eps:
+            eps.append(p[3][2])
+            result.append(p)
+    return result
+
+def get_size(local, ep):
+    """return the size of ep in local episodes"""
+    for l in local:
+        if l[0][2] == ep:
+            return l[1]
+    return -1
 
 def get_diff_episodes(packages, local):
     """return the difference between the folder of packages and local"""
-    package_eps = set([p[3][2] for p in packages])
-    local_eps = [l[2] for l in local]
-    diff_eps = list(set(package_eps) - set(local_eps))
-    logging.debug("package: " + str(package_eps))
-    logging.debug("local: " + str(local_eps))
-    return diff_eps
+    todo = []
+    local_eps = [l[0][2] for l in local]
+    packages = distinct_packages(packages)
+    for p in packages:
+        ep = p[3][2]
+        size = int(p[2])
+        if ep in local_eps:
+            local_size = int(get_size(local, ep)/(1024*1024))
+            if size-1 <= local_size <= size+1:
+                continue
+        todo.append(ep)
+    return todo
+
+def delete_local_episodes(anime, ep):
+    """delete the local ep"""
+    path = os.path.join(ANIME_FOLDER, anime, "[HorribleSubs] " + anime + " - " + ep + " [720p].mkv")
+    if os.path.isfile(path):
+        os.remove(path)
 
 def get_episode_package(packages, episode):
     """get availible package of episode, first default then random"""
@@ -79,6 +109,7 @@ def main():
         if diff:
             print(colored('missing: ' + str(diff), 'red'))
             for episode in diff:
+                delete_local_episodes(show, episode)
                 package = get_episode_package(packages, episode)
                 if not package[0] in result:
                     result[package[0]] = [package[1]]
