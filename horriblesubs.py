@@ -7,6 +7,7 @@ from termcolor import colored
 import config
 import irclient
 import xdccparser
+import colorama
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -70,27 +71,56 @@ def get_diff_episodes(packages, local):
         size = int(p[2])
         if ep in local_eps:
             local_size = int(get_size(local, ep)/(1024*1024))
+            #print(str(size) + " =?= " + str(local_size))
             if size-1 <= local_size <= size+1:
                 continue
         todo.append(ep)
     return todo
 
-def delete_local_episodes(anime, ep):
+def delete_local_episodes(anime, episode):
     """delete the local ep"""
-    path = os.path.join(ANIME_FOLDER, anime, "[HorribleSubs] " + anime + " - " + ep + " [720p].mkv")
+    path = os.path.join(ANIME_FOLDER, anime, "[HorribleSubs] " + anime + " - " + episode + " [720p].mkv")
     if os.path.isfile(path):
         os.remove(path)
 
-def get_episode_package(packages, episode):
-    """get availible package of episode, first default then random"""
-    selected = []
+def get_packages_by_ep(packages, episode):
+    result = []
+    version_result = []
     for package in packages:
         if package[3][2] == episode:
-            if package[0] == DEFAULT_BOT:
-                return package
+            if package[3][3]:
+                version_result.append(package)
             else:
-                selected.append(package)
+                result.append(package)
+    return (result, version_result)
+
+def get_latest_packages(version_result):
+    packs = []
+    max = 0
+    for result in version_result:
+        version = int(result[3][3][1:])
+        if version < max:
+            continue
+        if version > max:
+            packs.clear()
+            max = version
+        packs.append(result)
+    return packs
+
+def get_packages(packages):
+    selected = []
+    for package in packages:
+        if package[0] == DEFAULT_BOT:
+            return package
+        else:
+            selected.append(package)
     return selected[randint(0, len(selected)-1)]
+
+def get_episode_package(packages, episode):
+    """get availible package of episode, first default then random"""
+    (result, version_result) = get_packages_by_ep(packages, episode)
+    packages = get_latest_packages(version_result) if version_result else result
+    return get_packages(packages)
 
 def print_json(data):
     """pretty print of json_data"""
@@ -99,6 +129,7 @@ def print_json(data):
 
 def main():
     """main"""
+    colorama.init()
     animes = get_subscribed_animes() if os.path.isfile(CONFIG_FILE) else get_local_animes()
     result = {}
     for show in animes:
@@ -121,6 +152,7 @@ def main():
     if not result:
         return
     json_data = json.dumps(result)
+    print_json(json_data)
     irc = irclient.irc_client(json_data, ANIME_FOLDER)
     irc.connect()
 

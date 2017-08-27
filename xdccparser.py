@@ -23,9 +23,13 @@ def search(anime, default_res):
 def parse_name(name):
     """
     parse anime episode name
-    [0]sGrp|[1]name|[2]ep|[3]res
+    Group 1. `HorribleSubs`
+    Group 2. `Sagrada Reset`
+    Group 3. `03`
+    Group 4. `v2`
+    Group 5. `720`
     """
-    matches = re.findall(r'^\[(.*?)\]\s(.*?)\s-\s(\d+(?:\.\d+|)).+?\[([0-9]{3,4})p\]\.mkv$', name)
+    matches = re.findall(r'^\[(.*?)\]\s(.*?)\s-\s(\d+(?:\.\d+|))(v\d|).+?\[([0-9]{3,4})p\]\.mkv$', name)
     return [match for match in matches[0]] if matches else None
 
 def get_value(pair):
