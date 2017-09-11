@@ -4,12 +4,13 @@ import config
 
 def login_callback(line):
     """callback-function for login"""
-    if line[1] == "004":
-        print("logged in")
-        return True
-    elif line[1] == "433":
-        print("nick already in use")
-        sys.exit(1)
+    if len(line) > 1:
+        if line[1] == "004":
+            print("logged in")
+            return True
+        elif line[1] == "433":
+            print("nick already in use")
+            sys.exit(1)
 
 def join_callback(line):
     """callback-function for join"""
@@ -18,8 +19,9 @@ def join_callback(line):
 
 def botname_callback(line):
     """callback-function for getBotName"""
-    if line[1] == "311" and line[2] == config.USER:
-        return line[4] + "@" + line[5]
+    if len(line) > 5:
+        if line[1] == "311" and line[2] == config.USER:
+            return line[4] + "@" + line[5]
 
 def process_callback(line):
     """callback-function for process"""

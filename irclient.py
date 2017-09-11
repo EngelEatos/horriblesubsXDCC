@@ -8,6 +8,7 @@ from tqdm import tqdm
 import xdccparser
 import config
 import callback
+import chardet
 
 HOST = config.HOST
 PORT = config.PORT
@@ -25,8 +26,8 @@ class irc_client():
 
     def send(self, msg):
         """send message"""
-        print(msg+"\r\n")
-        self.sock.send((msg+"\r\n").encode())
+        print("%s\r\n" % msg)
+        self.sock.send(bytes("%s\n" % msg, "UTF-8"))
 
     def privmsg(self, target, msg):
         """send private message"""
@@ -83,23 +84,43 @@ class irc_client():
             self.whois[bot] = self.receive(callback.botname_callback)
         return self.whois[bot]
 
+    def uprint(*objects, sep=' ', end='\n', file=sys.stdout):
+        enc = file.encoding
+        if enc == 'UTF-8':
+            print(*objects, sep=sep, end=end, file=file)
+        else:
+            f = lambda obj: str(obj).encode(enc, errors='backslashreplace').decode(enc)
+            print(*map(f, objects), sep=sep, end=end, file=file)
+
     def receive(self, callback_function):
         """receive line from irc-server"""
-        readbuffer = ""
         while True:
-            readbuffer = readbuffer + self.sock.recv(1024).decode("utf-8")
-            temp = readbuffer.split("\n")
-            readbuffer = temp.pop()
-            for line in temp:
-                line = line.rstrip()
-                line = line.split()
-                if len(line) < 1:
-                    return
-                res = callback_function(line)
-                if res:
-                    return res
-                elif line[0] == "PING":
-                    self.send("PONG %s\r\n" % line[1])
+            try:
+                data = self.sock.recv(2048).decode('utf-8')
+            except Exception as e:
+                print(e)
+            if not data:
+                continue
+            lines = data.split("\n")
+            for line in lines:
+                data_array = line.split(' ')
+                print(data_array)
+                #self.uprint(data_array)
+                #print()
+                if len(data_array) <= 1:
+                    continue
+                if data_array[0] == 'PING':
+                    self.send("PONG %s\r\n" % data_array[1])
+                elif data_array[1] == 'JOIN':
+                    print("JOIN - %s" % self.get_user_name(data_array[0]))
+                elif data_array[1] == 'QUIT':
+                    print("QUIT - %s" % self.get_user_name(data_array[0]))
+                callback_result = callback_function(data_array)
+                if callback_result:
+                    return callback_result
+
+    def get_user_name(self, userHost):
+        return userHost[1:userHost.find('!')]
 
     def process(self):
         """proccess json and start download sequential"""
@@ -121,7 +142,7 @@ class irc_client():
             length = len(line)
             host = str(ipaddress.ip_address(int(line[length-3])))
             port = int(line[length-2])
-            size = int(line[length-1][:-1])
+            size = int(line[length-1][:-2])
             filename = self.stringbuild(line, 5, length-3)
             print("%s %s %s %s" % (host, port, size, filename))
             self.accept_tcp(host, port, filename[1:-1], size)
@@ -140,3 +161,7 @@ class irc_client():
                 return "%3.1f%s%s" % (num, unit, suffix)
             num /= 1024.0
         return "%.1f%s%s" % (num, 'Yi', suffix)
+
+if __name__ == '__main__':
+    irc = irc_client("[]", "G:/summer")
+    irc.connect()

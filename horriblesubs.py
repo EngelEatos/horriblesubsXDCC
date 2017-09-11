@@ -72,7 +72,7 @@ def get_diff_episodes(packages, local):
         if ep in local_eps:
             local_size = int(get_size(local, ep)/(1024*1024))
             #print(str(size) + " =?= " + str(local_size))
-            if size-1 <= local_size <= size+1:
+            if size-50 <= local_size <= size+50:
                 continue
         todo.append(ep)
     return todo
@@ -81,6 +81,7 @@ def delete_local_episodes(anime, episode):
     """delete the local ep"""
     path = os.path.join(ANIME_FOLDER, anime, "[HorribleSubs] " + anime + " - " + episode + " [720p].mkv")
     if os.path.isfile(path):
+        print("REMOVE: '%s'" % path)
         os.remove(path)
 
 def get_packages_by_ep(packages, episode):
