@@ -58,6 +58,7 @@ def create_gui(animes):
     root.mainloop()
 
 def main():
+    """Main-Methode"""
     create_gui(animes)
 
 if __name__ == '__main__':

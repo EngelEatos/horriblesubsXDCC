@@ -8,14 +8,13 @@ from tqdm import tqdm
 import xdccparser
 import config
 import callback
-import chardet
 
 HOST = config.HOST
 PORT = config.PORT
 USER = config.USER
 CHANNEL = config.CHANNEL
 
-class irc_client():
+class IrcClient():
     """irc-client"""
     def __init__(self, json_data, download_dir):
         """initalize ircclient"""
@@ -84,21 +83,10 @@ class irc_client():
             self.whois[bot] = self.receive(callback.botname_callback)
         return self.whois[bot]
 
-    def uprint(*objects, sep=' ', end='\n', file=sys.stdout):
-        enc = file.encoding
-        if enc == 'UTF-8':
-            print(*objects, sep=sep, end=end, file=file)
-        else:
-            f = lambda obj: str(obj).encode(enc, errors='backslashreplace').decode(enc)
-            print(*map(f, objects), sep=sep, end=end, file=file)
-
     def receive(self, callback_function):
         """receive line from irc-server"""
         while True:
-            try:
-                data = self.sock.recv(2048).decode('utf-8')
-            except Exception as e:
-                print(e)
+            data = self.sock.recv(2048).decode('utf-8')
             if not data:
                 continue
             lines = data.split("\n")
@@ -112,15 +100,12 @@ class irc_client():
                 if data_array[0] == 'PING':
                     self.send("PONG %s\r\n" % data_array[1])
                 elif data_array[1] == 'JOIN':
-                    print("JOIN - %s" % self.get_user_name(data_array[0]))
+                    print("JOIN - %s" % get_user_name(data_array[0]))
                 elif data_array[1] == 'QUIT':
-                    print("QUIT - %s" % self.get_user_name(data_array[0]))
+                    print("QUIT - %s" % get_user_name(data_array[0]))
                 callback_result = callback_function(data_array)
                 if callback_result:
                     return callback_result
-
-    def get_user_name(self, userHost):
-        return userHost[1:userHost.find('!')]
 
     def process(self):
         """proccess json and start download sequential"""
@@ -143,25 +128,29 @@ class irc_client():
             host = str(ipaddress.ip_address(int(line[length-3])))
             port = int(line[length-2])
             size = int(line[length-1][:-2])
-            filename = self.stringbuild(line, 5, length-3)
+            filename = stringbuild(line, 5, length-3)
             print("%s %s %s %s" % (host, port, size, filename))
             self.accept_tcp(host, port, filename[1:-1], size)
 
-    def stringbuild(self, line, start, end):
-        """build string from list from start to end"""
-        result = ""
-        for i in range(start, end):
-            result += line[i] + " "
-        return result[:len(result)-1]
+def get_user_name(irc_line):
+    """return username from irc-line"""
+    return irc_line[1:irc_line.find('!')]
 
-    def sizeof_fmt(self, num, suffix='B'):
-        """convert byte size to humanreadable size"""
-        for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
-            if abs(num) < 1024.0:
-                return "%3.1f%s%s" % (num, unit, suffix)
-            num /= 1024.0
-        return "%.1f%s%s" % (num, 'Yi', suffix)
+def stringbuild(line, start, end):
+    """build string from list from start to end"""
+    result = ""
+    for i in range(start, end):
+        result += line[i] + " "
+    return result[:len(result)-1]
+
+def sizeof_fmt(num, suffix='B'):
+    """convert byte size to humanreadable size"""
+    for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
 
 if __name__ == '__main__':
-    irc = irc_client("[]", "G:/summer")
-    irc.connect()
+    _IRC_ = IrcClient("[]", "G:/summer")
+    _IRC_.connect()

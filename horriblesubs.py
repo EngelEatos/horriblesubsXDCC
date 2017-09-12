@@ -28,8 +28,8 @@ def get_local_animes():
 def get_subscribed_animes():
     """return subscribed animes listed in CONFIG_FILE"""
     animes = []
-    with open(CONFIG_FILE, 'r') as config:
-        animes = json.load(config)
+    with open(CONFIG_FILE, 'r') as config_file:
+        animes = json.load(config_file)
     return animes
 
 def get_local_episodes(name):
@@ -38,27 +38,29 @@ def get_local_episodes(name):
     path = os.path.join(ANIME_FOLDER, name)
     if not os.path.isdir(path):
         os.makedirs(path)
-    for ep in os.listdir(path):
-        ep_path = os.path.join(path, ep)
+    for episode in os.listdir(path):
+        ep_path = os.path.join(path, episode)
         if os.path.isfile(ep_path):
-            episodes.append([xdccparser.parse_name(ep), os.stat(ep_path).st_size])
+            anime = xdccparser.parse_name(episode)
+            file_size = os.stat(ep_path).st_size
+            episodes.append([anime, file_size])
     return episodes
 
 def distinct_packages(packages):
     """return a distinct list of the packages"""
     result = []
     eps = []
-    for p in packages:
-        if p[3][2] not in eps:
-            eps.append(p[3][2])
-            result.append(p)
+    for package in packages:
+        if package[3][2] not in eps:
+            eps.append(package[3][2])
+            result.append(package)
     return result
 
-def get_size(local, ep):
+def get_size(local, episode):
     """return the size of ep in local episodes"""
-    for l in local:
-        if l[0][2] == ep:
-            return l[1]
+    for local_ep in local:
+        if local_ep[0][2] == episode:
+            return local_ep[1]
     return -1
 
 def get_diff_episodes(packages, local):
@@ -66,25 +68,27 @@ def get_diff_episodes(packages, local):
     todo = []
     local_eps = [l[0][2] for l in local]
     packages = distinct_packages(packages)
-    for p in packages:
-        ep = p[3][2]
-        size = int(p[2])
-        if ep in local_eps:
-            local_size = int(get_size(local, ep)/(1024*1024))
+    for package in packages:
+        episode = package[3][2]
+        size = int(package[2])
+        if episode in local_eps:
+            local_size = int(get_size(local, episode)/(1024*1024))
             #print(str(size) + " =?= " + str(local_size))
             if size-50 <= local_size <= size+50:
                 continue
-        todo.append(ep)
+        todo.append(episode)
     return todo
 
 def delete_local_episodes(anime, episode):
     """delete the local ep"""
-    path = os.path.join(ANIME_FOLDER, anime, "[HorribleSubs] " + anime + " - " + episode + " [720p].mkv")
+    filename = "[HorribleSubs] " + anime + " - " + episode + " [720p].mkv"
+    path = os.path.join(ANIME_FOLDER, anime, filename)
     if os.path.isfile(path):
         print("REMOVE: '%s'" % path)
         os.remove(path)
 
 def get_packages_by_ep(packages, episode):
+    """return package by episode number"""
     result = []
     version_result = []
     for package in packages:
@@ -96,19 +100,21 @@ def get_packages_by_ep(packages, episode):
     return (result, version_result)
 
 def get_latest_packages(version_result):
+    """return latest package, use versioning"""
     packs = []
-    max = 0
+    version_max = 0
     for result in version_result:
         version = int(result[3][3][1:])
-        if version < max:
+        if version < version_max:
             continue
-        if version > max:
+        if version > version_max:
             packs.clear()
-            max = version
+            version_max = version
         packs.append(result)
     return packs
 
 def get_packages(packages):
+    """get matching package"""
     selected = []
     for package in packages:
         if package[0] == DEFAULT_BOT:
@@ -154,7 +160,7 @@ def main():
         return
     json_data = json.dumps(result)
     print_json(json_data)
-    irc = irclient.irc_client(json_data, ANIME_FOLDER)
+    irc = irclient.IrcClient(json_data, ANIME_FOLDER)
     irc.connect()
 
 if __name__ == '__main__':
