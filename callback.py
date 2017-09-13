@@ -1,6 +1,5 @@
 """all acllback functions for receive-function in one file"""
 import sys
-import config
 
 def login_callback(line):
     """callback-function for login"""
@@ -20,7 +19,7 @@ def join_callback(line):
 def botname_callback(line):
     """callback-function for getBotName"""
     if len(line) > 5:
-        if line[1] == "311" and line[2] == config.USER:
+        if line[1] == "311":
             return line[4] + "@" + line[5]
 
 def process_callback(line):

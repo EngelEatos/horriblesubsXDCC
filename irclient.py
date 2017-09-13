@@ -6,13 +6,14 @@ import json
 import ipaddress
 from tqdm import tqdm
 import xdccparser
-import config
+from ircsettingsloader import IrcSettingsLoader
 import callback
 
-HOST = config.HOST
-PORT = config.PORT
-USER = config.USER
-CHANNEL = config.CHANNEL
+ISL = IrcSettingsLoader()
+HOST = ISL.get_host()
+PORT = ISL.get_port()
+USER = ISL.get_user()
+CHANNEL = ISL.get_channel()
 
 class IrcClient():
     """irc-client"""
