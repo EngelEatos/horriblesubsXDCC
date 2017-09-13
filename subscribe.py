@@ -2,15 +2,14 @@
 import os
 import json
 import showparser
-import config
+from animesettingsloader import AnimeSettingsLoader
 from beautifultable import BeautifulTable
 
-CONFIG_FILE = config.CONFIG_FILE
+ASL = AnimeSettingsLoader()
 
 def subscribe(data):
     """writes shows to file"""
-    with open(CONFIG_FILE, 'w', encoding='utf-8') as outfile:
-        json.dump(data, outfile, ensure_ascii=False)
+    ASL.set_watching(data)
 
 def decide(i, show):
     """decide if subscribe to show - takes yes/no"""
@@ -25,13 +24,13 @@ def decide(i, show):
 def digits(value):
     """return count of digits of number"""
     return len(str(value))
+
 def main():
     """main"""
     table = BeautifulTable()
     table.column_headers = ["idx", "anime", "subscribed"]
     data = []
-    if os.path.isfile(CONFIG_FILE):
-        os.remove(CONFIG_FILE)
+
     shows = list(showparser.get_airing_shows().keys())
     for idx, show in enumerate(shows):
         num = str(idx+1).zfill(digits(len(shows)))

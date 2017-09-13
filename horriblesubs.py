@@ -4,18 +4,17 @@ import logging
 import json
 from random import randint
 from termcolor import colored
-import config
+from ircsettingsloader import IrcSettingsLoader
+from animesettingsloader import AnimeSettingsLoader
 import irclient
 import xdccparser
 import colorama
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-BASEURL = config.BASEURL
-ANIME_FOLDER = config.ANIME_FOLDER
-DEFAULT_RES = config.DEFAULT_RES
-DEFAULT_BOT = config.DEFAULT_BOT
-CONFIG_FILE = config.CONFIG_FILE
+BASEURL = "http://horriblesubs.info"
+ISL = IrcSettingsLoader()
+ASL = AnimeSettingsLoader()
 
 def get_local_animes():
     """return the folder/animes from ANIME_FOLDER."""
@@ -25,17 +24,10 @@ def get_local_animes():
             animes.append(folder)
     return animes
 
-def get_subscribed_animes():
-    """return subscribed animes listed in CONFIG_FILE"""
-    animes = []
-    with open(CONFIG_FILE, 'r') as config_file:
-        animes = json.load(config_file)
-    return animes
-
 def get_local_episodes(name):
     """return a list of files of a anime-folder inside ANIME_FOLDER"""
     episodes = []
-    path = os.path.join(ANIME_FOLDER, name)
+    path = os.path.join(ISL.get_anime_folder(), name)
     if not os.path.isdir(path):
         os.makedirs(path)
     for episode in os.listdir(path):
@@ -82,7 +74,7 @@ def get_diff_episodes(packages, local):
 def delete_local_episodes(anime, episode):
     """delete the local ep"""
     filename = "[HorribleSubs] " + anime + " - " + episode + " [720p].mkv"
-    path = os.path.join(ANIME_FOLDER, anime, filename)
+    path = os.path.join(ISL.get_anime_folder(), anime, filename)
     if os.path.isfile(path):
         print("REMOVE: '%s'" % path)
         os.remove(path)
@@ -117,7 +109,7 @@ def get_packages(packages):
     """get matching package"""
     selected = []
     for package in packages:
-        if package[0] == DEFAULT_BOT:
+        if package[0] == ISL.get_default_bot():
             return package
         else:
             selected.append(package)
@@ -137,11 +129,11 @@ def print_json(data):
 def main():
     """main"""
     colorama.init()
-    animes = get_subscribed_animes() if os.path.isfile(CONFIG_FILE) else get_local_animes()
+    animes = ASL.get_watching()
     result = {}
     for show in animes:
         print(show)
-        packages = xdccparser.search(show, DEFAULT_RES)
+        packages = xdccparser.search(show, ISL.get_default_res())
         local = get_local_episodes(show)
         diff = get_diff_episodes(packages, local)
         if diff:
@@ -160,7 +152,7 @@ def main():
         return
     json_data = json.dumps(result)
     print_json(json_data)
-    irc = irclient.IrcClient(json_data, ANIME_FOLDER)
+    irc = irclient.IrcClient(json_data, ISL.get_anime_folder())
     irc.connect()
 
 if __name__ == '__main__':

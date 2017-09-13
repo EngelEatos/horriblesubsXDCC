@@ -1,0 +1,11 @@
+{
+    "irc": {
+        "anime_folder": "G:/summer",
+        "channel": "#horriblesubs",
+        "default_bot": "CR-RALEIGH|NEW",
+        "default_res": "720p",
+        "host": "irc.rizon.net",
+        "port": 6667,
+        "user": "engeleatosbot2"
+    }
+}

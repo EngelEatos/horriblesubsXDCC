@@ -2,13 +2,13 @@
 import os
 import tkinter as tk
 from datetime import datetime
-import config
+from animesettingsloader import AnimeSettingsLoader
 import showparser
 import json
 
 CHECKVAR = dict()
 ROOT = tk.Tk()
-ANIME_LOADER = config.AnimeSettingsLoader()
+ANIME_LOADER = AnimeSettingsLoader()
 
 
 def save():
