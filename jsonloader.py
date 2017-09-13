@@ -15,7 +15,11 @@ def json_serial(obj):
 
 class JsonLoader():
     """Wrapper-class for json config file"""
-    CONFIG_FILE = "config.json"
+    CONFIG_FILE = None
+
+    def __init__(self, config_file):
+        self.CONFIG_FILE = config_file
+        self.json_data = self.load()
 
     def load(self):
         """load json from file"""
@@ -25,6 +29,10 @@ class JsonLoader():
         with open(self.CONFIG_FILE, 'r') as config:
             return json.load(config, object_hook=json_serial)
 
+    def create_config(self):
+        """gets overwritten"""
+        return
+    
     def save(self):
         """save changes and reload"""
         self.write_json_to_file(self.json_data)

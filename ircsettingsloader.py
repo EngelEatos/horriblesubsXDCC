@@ -2,7 +2,7 @@ from jsonloader import JsonLoader
 
 class IrcSettingsLoader(JsonLoader):
     """Wrapper-class for IRC-settings"""
-    CONFIG_FILE = "irc.json"
+    CONFIG_FILE = "settings/irc.json"
 
     def __init__(self):
         self.json_data = self.load()
