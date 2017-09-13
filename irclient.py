@@ -43,6 +43,11 @@ class IrcClient():
         if self.receive(callback.login_callback):
             self.join()
 
+    def quit(self):
+        self.send("QUIT I'm outty")
+        self.sock.close()
+        sys.exit(0)
+
     def join(self):
         """join channel on server"""
         print("trying to join channel: " + CHANNEL)
@@ -114,6 +119,7 @@ class IrcClient():
         for bot in bots:
             for package in bots[bot]:
                 self.download_files([bot, str(package)])
+        self.quit()
 
     def download_files(self, task):
         """download files by package number"""
