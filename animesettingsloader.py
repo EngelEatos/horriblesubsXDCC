@@ -5,6 +5,7 @@ import showparser
 class AnimeSettingsLoader(JsonLoader):
     """Wrapper-class for anime-settings"""
     CONFIG_FILE = "settings/animes.json"
+    
     def __init__(self):
         self.json_data = self.load()
 

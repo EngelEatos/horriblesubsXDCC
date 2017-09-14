@@ -38,6 +38,9 @@ class IrcClient():
         if self.receive(callback.login_callback):
             self.join()
 
+    def get_xdcc_info(self, bot, number):
+        self.privmsg(bot, "xdcc info %d" % number)
+        
     def quit(self):
         self.send("QUIT I'm outty")
         self.sock.close()
