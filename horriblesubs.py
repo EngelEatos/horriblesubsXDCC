@@ -9,6 +9,8 @@ from animesettingsloader import AnimeSettingsLoader
 import irclient
 import xdccparser
 import colorama
+from beautifultable import BeautifulTable
+from tabulate import tabulate
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -129,15 +131,20 @@ def print_json(data):
 def main():
     """main"""
     colorama.init()
+    if ASL.is_loaded() and ISL.is_loaded():
+        print(colored("<] configs successfull loaded [>\n", "green").center(80))
+    else:
+        print(colored(">[ configs failed to load. Exit ]<\n", "red").center(80))
+        sys.exit(1)
     animes = ASL.get_watching()
     result = {}
-    for show in animes:
-        print(show)
+    table_data = []
+    for idx, show in enumerate(animes):
         packages = xdccparser.search(show, ISL.get_default_res())
         local = get_local_episodes(show)
         diff = get_diff_episodes(packages, local)
         if diff:
-            print(colored('missing: ' + str(diff), 'red'))
+            table_data.append([idx+1, show, colored(str(diff), 'red')])
             for episode in diff:
                 delete_local_episodes(show, episode)
                 package = get_episode_package(packages, episode)
@@ -146,13 +153,15 @@ def main():
                 else:
                     result[package[0]].append(package[1])
         else:
-            print(colored('up to date', 'green'))
-        print()
+            table_data.append([idx+1, show, colored("\u2714", 'green')])
+    print(tabulate(table_data, headers=['idx', 'anime', 'status'], tablefmt='orgtbl'))
     if not result:
-        return
+        print(colored("<] nothing to do. [>\n", "green").center(80))
+        sys.exit(0)
     json_data = json.dumps(result)
-    print_json(json_data)
-    irc = irclient.IrcClient(json_data, ISL.get_anime_folder())
+    #debug print_json(json_data)
+
+    irc = irclient.IrcClient(json_data, ISL)
     irc.connect()
 
 if __name__ == '__main__':

@@ -25,14 +25,17 @@ class JsonLoader():
         """load json from file"""
         if not os.path.isfile(self.CONFIG_FILE):
             self.create_config()
-        print("found config - loading ...")
         with open(self.CONFIG_FILE, 'r') as config:
             return json.load(config, object_hook=json_serial)
+
+    def is_loaded(self):
+        """return bool if json_data is available"""
+        return self.json_data != None
 
     def create_config(self):
         """gets overwritten"""
         return
-    
+
     def save(self):
         """save changes and reload"""
         self.write_json_to_file(self.json_data)
