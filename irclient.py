@@ -9,18 +9,12 @@ import xdccparser
 from ircsettingsloader import IrcSettingsLoader
 import callback
 
-ISL = IrcSettingsLoader()
-HOST = ISL.get_host()
-PORT = ISL.get_port()
-USER = ISL.get_user()
-CHANNEL = ISL.get_channel()
-
 class IrcClient():
     """irc-client"""
-    def __init__(self, json_data, download_dir):
+    def __init__(self, isl, json_data):
         """initalize ircclient"""
+        self.isl = isl
         self.json_data = json_data
-        self.download_dir = download_dir
         self.sock = socket.socket()
         self.whois = dict()
 
@@ -35,11 +29,12 @@ class IrcClient():
 
     def connect(self):
         """connect to HOST, PORT"""
-        self.sock.connect((HOST, PORT))
-        #login
-        server = HOST[HOST.find('.')+1:HOST.rfind('.')]
-        self.send("NICK %s" % USER)
-        self.send("USER %s %s %s %s" % (USER, HOST, server, USER))
+        host = self.isl.get_host()
+        user = self.isl.get_user()
+        self.sock.connect((host, self.istl.get_host()))
+        server = host[host.find('.')+1:host.rfind('.')]
+        self.send("NICK %s" % user)
+        self.send("USER %s %s %s %s" % (user, host, server, user))
         if self.receive(callback.login_callback):
             self.join()
 
@@ -50,23 +45,25 @@ class IrcClient():
 
     def join(self):
         """join channel on server"""
-        print("trying to join channel: " + CHANNEL)
-        self.send("JOIN " + CHANNEL)
+        channel = self.isl.get_channel()
+        print("trying to join channel: " + channel)
+        self.send("JOIN " + channel)
         if self.receive(callback.join_callback):
-            print("Join successfull - channel: " + CHANNEL)
+            print("Join successfull - channel: " + channel)
             self.process()
         else:
             print("Join failed")
             sys.exit(1)
 
-    def accept_tcp(self, host, port, filename, size):
+    def accept_tcp(self, host, port, filename, size, download_dir):
         """accept incoming tcp offer"""
         anime = xdccparser.parse_name(filename)[1]
         if anime == "Knight_s & Magic":
             anime = "Knight's & Magic"
             filename = filename.replace("Knight_s & Magic", anime)
-        episode_file = open(os.path.join(self.download_dir, anime, filename), 'wb')
-        print(os.path.join(self.download_dir, anime, filename))
+        episode_path = os.path.join(download_dir, anime, filename)
+        episode_file = open(episode_file, 'wb')
+        print(episode_path)
         tcp_socket = socket.socket()
         tcp_socket.connect((host, port))
         print("SOCKET connected to %s:%s" % (host, port))
@@ -76,7 +73,6 @@ class IrcClient():
                 received = tcp_socket.recv(1024)
                 current += len(received)
                 pbar.update(len(received))
-                #print(Receiving: " + self.sizeof_fmt(current) + "/" + self.sizeof_fmt(int(size)))
                 episode_file.write(received)
         episode_file.close()
         print("DONE: " + filename)
@@ -116,12 +112,13 @@ class IrcClient():
     def process(self):
         """proccess json and start download sequential"""
         bots = json.loads(self.json_data)
+        download_dir = self.isl.get_anime_folder()
         for bot in bots:
             for package in bots[bot]:
-                self.download_files([bot, str(package)])
+                self.download_files([bot, str(package)], download_dir)
         self.quit()
 
-    def download_files(self, task):
+    def download_files(self, task, download_dir):
         """download files by package number"""
         bot = task[0]
         package = task[1]
@@ -137,7 +134,7 @@ class IrcClient():
             size = int(line[length-1][:-2])
             filename = stringbuild(line, 5, length-3)
             print("%s %s %s %s" % (host, port, size, filename))
-            self.accept_tcp(host, port, filename[1:-1], size)
+            self.accept_tcp(host, port, filename[1:-1], size, download_dir)
 
 def get_user_name(irc_line):
     """return username from irc-line"""
