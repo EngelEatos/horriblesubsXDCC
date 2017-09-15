@@ -20,7 +20,7 @@ class IrcClient():
 
     def send(self, msg):
         """send message"""
-        print("%s\r\n" % msg)
+        print("< %s\r\n" % msg)
         self.sock.send(bytes("%s\n" % msg, "UTF-8"))
 
     def privmsg(self, target, msg):
@@ -31,7 +31,7 @@ class IrcClient():
         """connect to HOST, PORT"""
         host = self.isl.get_host()
         user = self.isl.get_user()
-        self.sock.connect((host, self.istl.get_host()))
+        self.sock.connect((host, self.isl.get_port()))
         server = host[host.find('.')+1:host.rfind('.')]
         self.send("NICK %s" % user)
         self.send("USER %s %s %s %s" % (user, host, server, user))
@@ -65,7 +65,7 @@ class IrcClient():
             anime = "Knight's & Magic"
             filename = filename.replace("Knight_s & Magic", anime)
         episode_path = os.path.join(download_dir, anime, filename)
-        episode_file = open(episode_file, 'wb')
+        episode_file = open(episode_path, 'wb')
         print(episode_path)
         tcp_socket = socket.socket()
         tcp_socket.connect((host, port))
@@ -97,17 +97,21 @@ class IrcClient():
             lines = data.split("\n")
             for line in lines:
                 data_array = line.split(' ')
-                print(data_array)
+                
                 #self.uprint(data_array)
                 #print()
                 if len(data_array) <= 1:
                     continue
                 if data_array[0] == 'PING':
-                    self.send("PONG %s\r\n" % data_array[1])
+                    self.send("PONG %s" % data_array[1])
                 elif data_array[1] == 'JOIN':
-                    print("JOIN - %s" % get_user_name(data_array[0]))
+                    print("> JOIN - %s" % get_user_name(data_array[0]))
                 elif data_array[1] == 'QUIT':
-                    print("QUIT - %s" % get_user_name(data_array[0]))
+                    print("> QUIT - %s" % get_user_name(data_array[0]))
+                elif data_array[1] == '353' or "/NAMES" in data_array or data_array[1] == '372':
+                    continue
+                else:
+                    print(data_array)
                 callback_result = callback_function(data_array)
                 if callback_result:
                     return callback_result
