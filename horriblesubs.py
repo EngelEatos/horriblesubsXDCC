@@ -161,7 +161,7 @@ def main():
     json_data = json.dumps(result)
     #debug print_json(json_data)
 
-    irc = irclient.IrcClient(json_data, ISL)
+    irc = irclient.IrcClient(ISL, json_data)
     irc.connect()
 
 if __name__ == '__main__':
