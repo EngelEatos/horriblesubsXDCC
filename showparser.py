@@ -27,8 +27,9 @@ def get_all_shows():
 
 def get_soup(url):
     """get soup of url"""
-    content = requests.get(url)
+    request = requests.get(url)
+    content = request.text
     if content.status_code == 503:
         scraper = cfscrape.create_scraper()
-        return bs(scraper.get(url).content, 'html.parser')
-    return bs(content.text, 'html.parser')
+        content = scraper.get(url).content
+    return bs(content, 'html.parser')
