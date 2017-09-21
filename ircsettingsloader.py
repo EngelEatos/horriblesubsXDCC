@@ -1,16 +1,17 @@
+"""loader for irc settings"""
 from jsonloader import JsonLoader
+
 
 class IrcSettingsLoader(JsonLoader):
     """Wrapper-class for IRC-settings"""
-    CONFIG_FILE = "settings/irc.json"
+    config_file = "settings/irc.json"
 
     def __init__(self):
         self.json_data = self.load()
 
     def create_config(self):
-        self.json_data = {"irc" : {"host": "irc.rizon.net", "port": 6667,
-               "channel": "#horriblesubs", "user": "engeleatosbot2",
-               "default_bot": "CR-RALEIGH|NEW", "default_res": "720p", "anime_folder": "G:/summer"}}
+        self.json_data = {"irc": {"host": "irc.rizon.net", "port": 6667, "channel": "#horriblesubs",
+                                  "user": "engeleatosbot2", "default_bot": "CR-RALEIGH|NEW", "default_res": "720p", "anime_folder": "G:/summer"}}
         self.save()
 
     def get_irc_settings(self):
@@ -85,4 +86,4 @@ class IrcSettingsLoader(JsonLoader):
     def set_anime_folder(self, anime_folder):
         """set anime_folder"""
         self.set_irc_settings(self.change_key(
-            "anime_folder", anime_folders, self.get_irc_settings()))
+            "anime_folder", anime_folder, self.get_irc_settings()))
