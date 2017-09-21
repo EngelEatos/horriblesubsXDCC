@@ -1,8 +1,8 @@
 """all constants in one file"""
-import os
 import json
+import os
 from datetime import date, datetime
-import showparser
+
 
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
@@ -15,17 +15,14 @@ def json_serial(obj):
 
 class JsonLoader():
     """Wrapper-class for json config file"""
-    CONFIG_FILE = None
-
-    def __init__(self, config_file):
-        self.CONFIG_FILE = config_file
-        self.json_data = self.load()
+    config_file = ""
+    json_data = ""
 
     def load(self):
         """load json from file"""
-        if not os.path.isfile(self.CONFIG_FILE):
+        if not os.path.isfile(self.config_file):
             self.create_config()
-        with open(self.CONFIG_FILE, 'r') as config:
+        with open(self.config_file, 'r') as config:
             return json.load(config, object_hook=json_serial)
 
     def is_loaded(self):
@@ -34,7 +31,7 @@ class JsonLoader():
 
     def create_config(self):
         """gets overwritten"""
-        return
+        return self.json_data
 
     def save(self):
         """save changes and reload"""
@@ -56,7 +53,7 @@ class JsonLoader():
 
     def write_json_to_file(self, data):
         """write json to file"""
-        with open(self.CONFIG_FILE, 'w', encoding='utf-8') as outfile:
+        with open(self.config_file, 'w', encoding='utf-8') as outfile:
             json.dump(data, outfile, ensure_ascii=False,
                       default=json_serial, indent=4, sort_keys=True)
 

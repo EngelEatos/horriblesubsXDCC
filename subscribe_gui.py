@@ -1,10 +1,8 @@
 """generate config file for subscribing animes with gui"""
-import os
 import tkinter as tk
 from datetime import datetime
+
 from animesettingsloader import AnimeSettingsLoader
-import showparser
-import json
 
 CHECKVAR = dict()
 ROOT = tk.Tk()
@@ -38,7 +36,7 @@ class Frame(tk.Frame):  # pylint: disable=too-many-ancestors
         self.vsb.pack(side="right", fill="y")
         self.text.pack(side="left", fill="both", expand=True)
 
-        for idx, anime in enumerate(self.airing):
+        for anime in self.airing.keys():
             CHECKVAR[anime] = tk.IntVar()
             check_btn = tk.Checkbutton(
                 self, text=anime, variable=CHECKVAR[anime])
@@ -47,7 +45,7 @@ class Frame(tk.Frame):  # pylint: disable=too-many-ancestors
                 check_btn.toggle()
             self.text.window_create("end", window=check_btn)
             self.text.insert("end", "\n")
-        self.btn = tk.Button(text='save', command=lambda: save())
+        self.btn = tk.Button(text='save', command=save())
         self.btn.pack(side="bottom", fill="both", expand=True)
         self.text.config(state="disabled")
 
@@ -61,7 +59,7 @@ def check_expired(date):
     return mod[0] >= 600
 
 
-def create_gui():
+def main():
     """create and show frame"""
     modified_date = ANIME_LOADER.get_modified_date()
     if check_expired(modified_date):
@@ -70,11 +68,6 @@ def create_gui():
     watching = ANIME_LOADER.get_watching()
     Frame(ROOT, airing, watching).pack(side="top", fill="both", expand=True)
     ROOT.mainloop()
-
-
-def main():
-    """Main-Methode"""
-    create_gui()
 
 
 if __name__ == '__main__':

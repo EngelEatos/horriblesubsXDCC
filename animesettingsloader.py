@@ -1,17 +1,21 @@
-from jsonloader import JsonLoader
+"""Loader for Anime settings"""
 from datetime import datetime
+
 import showparser
+from jsonloader import JsonLoader
+
 
 class AnimeSettingsLoader(JsonLoader):
     """Wrapper-class for anime-settings"""
-    CONFIG_FILE = "settings/animes.json"
-    
+    config_file = "settings/animes.json"
+
     def __init__(self):
         self.json_data = self.load()
 
-    def create_config(self, watching=""):
-        self.json_data = {"animes" : {"watching": watching, "airing": showparser.get_airing_shows(),
-                "all": showparser.get_all_shows(), "modified_date": datetime.now()}}
+    def create_config(self):
+        """create new config file"""
+        self.json_data = {"animes": {"watching": [], "airing": showparser.get_airing_shows(
+        ), "all": showparser.get_all_shows(), "modified_date": datetime.now()}}
         self.save()
 
     def get_anime_settings(self):
@@ -53,6 +57,7 @@ class AnimeSettingsLoader(JsonLoader):
             'all', all_anime, self.get_anime_settings))
 
     def update(self):
+        """update airing and all animes from website"""
         self.set_airing(showparser.get_airing_shows())
         self.set_all_anime(showparser.get_all_shows())
         self.set_modified_date(datetime.now())
@@ -60,7 +65,8 @@ class AnimeSettingsLoader(JsonLoader):
 
     def get_modified_date(self):
         """return date"""
-        return datetime.strptime(self.get_value('modified_date', self.get_anime_settings()), "%Y-%m-%dT%H:%M:%S.%f")
+        return datetime.strptime(
+            self.get_value('modified_date', self.get_anime_settings()), "%Y-%m-%dT%H:%M:%S.%f")
 
     def set_modified_date(self, modified_date):
         """set date"""

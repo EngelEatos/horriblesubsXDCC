@@ -1,15 +1,19 @@
 """generate config file for subscribing animes """
 import os
-import json
-import showparser
-from animesettingsloader import AnimeSettingsLoader
+
 from beautifultable import BeautifulTable
 
+import showparser
+from animesettingsloader import AnimeSettingsLoader
+
 ASL = AnimeSettingsLoader()
+
 
 def subscribe(data):
     """writes shows to file"""
     ASL.set_watching(data)
+    ASL.save()
+
 
 def decide(i, show):
     """decide if subscribe to show - takes yes/no"""
@@ -21,9 +25,11 @@ def decide(i, show):
         if answer in ["y", "n"]:
             return answer == "y"
 
+
 def digits(value):
     """return count of digits of number"""
     return len(str(value))
+
 
 def main():
     """main"""
@@ -33,17 +39,19 @@ def main():
 
     shows = list(showparser.get_airing_shows().keys())
     for idx, show in enumerate(shows):
-        num = str(idx+1).zfill(digits(len(shows)))
+        num = str(idx + 1).zfill(digits(len(shows)))
         if decide(num, show):
-            table.append_row([idx+1, show, "x"])
+            table.append_row([idx + 1, show, "x"])
             data.append(show)
         else:
-            table.append_row([idx+1, show, "-"])
+            table.append_row([idx + 1, show, "-"])
     os.system('cls' if os.name == 'nt' else 'clear')
 
     print(table)
     subscribe(data)
-    print("\nRESULT:\tsubscribed to " + str(len(data)) + " of total " + str(len(shows)) + " Animes")
+    print("\nRESULT:\tsubscribed to " + str(len(data)) +
+          " of total " + str(len(shows)) + " Animes")
+
 
 if __name__ == '__main__':
     main()

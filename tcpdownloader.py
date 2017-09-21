@@ -2,6 +2,7 @@
 import socket
 import threading
 from queue import Queue
+
 from tqdm import tqdm
 
 
@@ -15,6 +16,7 @@ class TcpDownloader():
         self.current_pbar = 0
 
     def get_queue_size(self):
+        """return queue size"""
         return self.queue.empty()
 
     def add_download(self, host, port, size, download_path):

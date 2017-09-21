@@ -1,16 +1,18 @@
 """calculates diff of local and online Animes episodes & download these via XDCC"""
-import os
-import logging
 import json
+import logging
+import os
 import sys
 from random import randint
-from termcolor import colored
-from ircsettingsloader import IrcSettingsLoader
-from animesettingsloader import AnimeSettingsLoader
-from irclib import IrcLib
-import xdccparser
+
 import colorama
 from tabulate import tabulate
+from termcolor import colored
+
+import xdccparser
+from animesettingsloader import AnimeSettingsLoader
+from irclib import IrcLib
+from ircsettingsloader import IrcSettingsLoader
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
