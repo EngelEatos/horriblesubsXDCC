@@ -2,19 +2,20 @@
 import re
 from urllib.parse import quote
 
+import cfscrape
 import requests
 from pyparsing import commaSeparatedList
 
-# result
-#    0          1         2     3
-# botname - packageNr - size - name
-
 
 def search(anime, default_res):
-    """search xdcc site and parse result"""
-    term = anime + " " + default_res
-    content = requests.get(
-        "http://xdcc.horriblesubs.info/search.php?t=" + quote(term)).text
+    """
+    search xdcc site and parse result
+       0          1         2     3
+    botname - packageNr - size - name
+    """
+    search_term = quote(anime + " " + default_res)
+    url = "http://xdcc.horriblesubs.info/search.php?t=" + search_term
+    content = get_content(url)
     matches = re.findall(r'\{(.*?)\}', content)
     result = []
     for match in matches:
@@ -45,8 +46,11 @@ def get_value(pair):
     return pair[pair.find(":") + 2:-1] if "\"" in pair else pair[pair.find(":") + 1:]
 
 
-def main():
-    """main"""
-    result = search("Castlevania", "720p")
-    for res in result:
-        print(res)
+def get_content(url):
+    """get content - cfscrape"""
+    request = requests.get(url)
+    content = request.text
+    if request.status_code == 503:
+        scraper = cfscrape.create_scraper()
+        content = scraper.get(url).content
+    return content
