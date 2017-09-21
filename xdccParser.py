@@ -1,15 +1,20 @@
 """parse xdcc index site"""
 import re
 from urllib.parse import quote
+
 import requests
 from pyparsing import commaSeparatedList
-#result
+
+# result
 #    0          1         2     3
 # botname - packageNr - size - name
+
+
 def search(anime, default_res):
     """search xdcc site and parse result"""
     term = anime + " " + default_res
-    content = requests.get("http://xdcc.horriblesubs.info/search.php?t=" + quote(term)).text
+    content = requests.get(
+        "http://xdcc.horriblesubs.info/search.php?t=" + quote(term)).text
     matches = re.findall(r'\{(.*?)\}', content)
     result = []
     for match in matches:
@@ -20,6 +25,7 @@ def search(anime, default_res):
             result.append(itm)
     return result
 
+
 def parse_name(name):
     """
     parse anime episode name
@@ -29,24 +35,18 @@ def parse_name(name):
     Group 4. `v2`
     Group 5. `720`
     """
-    matches = re.findall(r'^\[(.*?)\]\s(.*?)\s-\s(\d+(?:\.\d+|))(v\d|).+?\[([0-9]{3,4})p\]\.mkv$', name)
+    pattern = r'^\[(.*?)\]\s(.*?)\s-\s(\d+(?:\.\d+|))(v\d|).+?\[([0-9]{3,4})p\]\.mkv$'
+    matches = re.findall(pattern, name)
     return [match for match in matches[0]] if matches else None
+
 
 def get_value(pair):
     """get value key:{value}"""
-    return pair[pair.find(":")+2:-1] if "\"" in pair else pair[pair.find(":")+1:]
+    return pair[pair.find(":") + 2:-1] if "\"" in pair else pair[pair.find(":") + 1:]
+
 
 def main():
     """main"""
     result = search("Castlevania", "720p")
     for res in result:
         print(res)
-
-def test():
-    result = search("Knight's & Magic", "720p")
-    for r in result:
-        print(r[2])
-
-if __name__ == '__main__':
-    test()
-    #main()
