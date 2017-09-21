@@ -2,29 +2,23 @@
 import os
 import logging
 import json
+import sys
 from random import randint
 from termcolor import colored
 from ircsettingsloader import IrcSettingsLoader
 from animesettingsloader import AnimeSettingsLoader
-import irclient
+from irclib import IrcLib
 import xdccparser
 import colorama
-from beautifultable import BeautifulTable
 from tabulate import tabulate
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 BASEURL = "http://horriblesubs.info"
 ISL = IrcSettingsLoader()
 ASL = AnimeSettingsLoader()
 
-def get_local_animes():
-    """return the folder/animes from ANIME_FOLDER."""
-    animes = []
-    for folder in os.listdir(ANIME_FOLDER):
-        if os.path.isdir(os.path.join(ANIME_FOLDER, folder)):
-            animes.append(folder)
-    return animes
 
 def get_local_episodes(name):
     """return a list of files of a anime-folder inside ANIME_FOLDER"""
@@ -40,6 +34,7 @@ def get_local_episodes(name):
             episodes.append([anime, file_size])
     return episodes
 
+
 def distinct_packages(packages):
     """return a distinct list of the packages"""
     result = []
@@ -50,12 +45,14 @@ def distinct_packages(packages):
             result.append(package)
     return result
 
+
 def get_size(local, episode):
     """return the size of ep in local episodes"""
     for local_ep in local:
         if local_ep[0][2] == episode:
             return local_ep[1]
     return -1
+
 
 def get_diff_episodes(packages, local):
     """return the difference between the folder of packages and local"""
@@ -66,12 +63,13 @@ def get_diff_episodes(packages, local):
         episode = package[3][2]
         size = int(package[2])
         if episode in local_eps:
-            local_size = int(get_size(local, episode)/(1024*1024))
+            local_size = int(get_size(local, episode) / (1024 * 1024))
             #print(str(size) + " =?= " + str(local_size))
-            if size-50 <= local_size <= size+50:
+            if size - 50 <= local_size <= size + 50:
                 continue
         todo.append(episode)
     return todo
+
 
 def delete_local_episodes(anime, episode):
     """delete the local ep"""
@@ -80,6 +78,7 @@ def delete_local_episodes(anime, episode):
     if os.path.isfile(path):
         print("REMOVE: '%s'" % path)
         os.remove(path)
+
 
 def get_packages_by_ep(packages, episode):
     """return package by episode number"""
@@ -92,6 +91,7 @@ def get_packages_by_ep(packages, episode):
             else:
                 result.append(package)
     return (result, version_result)
+
 
 def get_latest_packages(version_result):
     """return latest package, use versioning"""
@@ -107,6 +107,7 @@ def get_latest_packages(version_result):
         packs.append(result)
     return packs
 
+
 def get_packages(packages):
     """get matching package"""
     selected = []
@@ -115,26 +116,32 @@ def get_packages(packages):
             return package
         else:
             selected.append(package)
-    return selected[randint(0, len(selected)-1)]
+    return selected[randint(0, len(selected) - 1)]
+
 
 def get_episode_package(packages, episode):
     """get availible package of episode, first default then random"""
     (result, version_result) = get_packages_by_ep(packages, episode)
-    packages = get_latest_packages(version_result) if version_result else result
+    packages = get_latest_packages(
+        version_result) if version_result else result
     return get_packages(packages)
+
 
 def print_json(data):
     """pretty print of json_data"""
     parsed = json.loads(data)
     print(json.dumps(parsed, indent=4, sort_keys=True))
 
+
 def main():
     """main"""
     colorama.init()
     if ASL.is_loaded() and ISL.is_loaded():
-        print(colored("<] configs successfull loaded [>\n", "green").center(80))
+        print(
+            colored("<] configs successfull loaded [>\n", "green").center(80))
     else:
-        print(colored(">[ configs failed to load. Exit ]<\n", "red").center(80))
+        print(
+            colored(">[ configs failed to load. Exit ]<\n", "red").center(80))
         sys.exit(1)
     animes = ASL.get_watching()
     result = {}
@@ -144,7 +151,7 @@ def main():
         local = get_local_episodes(show)
         diff = get_diff_episodes(packages, local)
         if diff:
-            table_data.append([idx+1, show, colored(str(diff), 'red')])
+            table_data.append([idx + 1, show, colored(str(diff), 'red')])
             for episode in diff:
                 delete_local_episodes(show, episode)
                 package = get_episode_package(packages, episode)
@@ -153,16 +160,29 @@ def main():
                 else:
                     result[package[0]].append(package[1])
         else:
-            table_data.append([idx+1, show, colored("\u2714", 'green')])
-    print(tabulate(table_data, headers=['idx', 'anime', 'status'], tablefmt='orgtbl'))
+            table_data.append([idx + 1, show, colored("\u2714", 'green')])
+    print(tabulate(table_data, headers=[
+        'idx', 'anime', 'status'], tablefmt='orgtbl'))
     if not result:
         print(colored("<] nothing to do. [>\n", "green").center(80))
         sys.exit(0)
     json_data = json.dumps(result)
-    #debug print_json(json_data)
+    # debug print_json(json_data)
+    print()
+    key = input("press enter to start downloading...")
+    if key == "":
+        server = (ISL.get_host(), ISL.get_port())
+        serverinfo = (server, ISL.get_user(),
+                      ISL.get_channel(), ISL.get_anime_folder())
+        host = ISL.get_host()
+        port = ISL.get_port()
+        user = ISL.get_user()
+        channel = ISL.get_channel()
+        download_dir = ISL.get_anime_folder()
 
-    irc = irclient.IrcClient(ISL, json_data)
-    irc.connect()
+        irc = IrcLib(host, port, user, channel, download_dir, json_data)
+        irc.connect()
+
 
 if __name__ == '__main__':
     main()
