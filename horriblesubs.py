@@ -11,8 +11,8 @@ from termcolor import colored
 
 import xdccparser
 from animesettingsloader import AnimeSettingsLoader
-from irclib import IrcLib
 from ircsettingsloader import IrcSettingsLoader
+from tcpdownloader import TcpDownloader
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -66,7 +66,7 @@ def get_diff_episodes(packages, local):
         size = int(package[2])
         if episode in local_eps:
             local_size = int(get_size(local, episode) / (1024 * 1024))
-            #print(str(size) + " =?= " + str(local_size))
+            # print(str(size) + " =?= " + str(local_size))
             if size - 50 <= local_size <= size + 50:
                 continue
         todo.append(episode)
@@ -135,21 +135,13 @@ def print_json(data):
     print(json.dumps(parsed, indent=4, sort_keys=True))
 
 
-def main():
-    """main"""
-    colorama.init()
-    if ASL.is_loaded() and ISL.is_loaded():
-        print(
-            colored("<] configs successfull loaded [>\n", "green").center(80))
-    else:
-        print(
-            colored(">[ configs failed to load. Exit ]<\n", "red").center(80))
-        sys.exit(1)
-    animes = ASL.get_watching()
+def compare(animes, cache):
     result = {}
     table_data = []
     for idx, show in enumerate(animes):
-        packages = xdccparser.search(show, ISL.get_default_res())
+        packages = cache[show] if show in cache.keys() else xdccparser.search(
+            show, ISL.get_default_res())
+        cache[show] = packages
         local = get_local_episodes(show)
         diff = get_diff_episodes(packages, local)
         if diff:
@@ -166,24 +158,53 @@ def main():
     print(tabulate(table_data, headers=[
         'idx', 'anime', 'status'], tablefmt='orgtbl'))
     if not result:
+        print()
         print(colored("<] nothing to do. [>\n", "green").center(80))
         sys.exit(0)
+    return result, cache
+
+
+def main():
+    """main"""
+    colorama.init()
+    if ASL.is_loaded() and ISL.is_loaded():
+        print(
+            colored("<] configs successfull loaded [>\n", "green").center(80))
+    else:
+        print(
+            colored(">[ configs failed to load. Exit ]<\n", "red").center(80))
+        sys.exit(1)
+    animes = ASL.get_watching()
+    result, cache = compare(animes, dict())
+    # result = {}
+    # table_data = []
+    # for idx, show in enumerate(animes):
+    #     packages = xdccparser.search(show, ISL.get_default_res())
+    #     local = get_local_episodes(show)
+    #     diff = get_diff_episodes(packages, local)
+    #     if diff:
+    #         table_data.append([idx + 1, show, colored(str(diff), 'red')])
+    #         for episode in diff:
+    #             delete_local_episodes(show, episode)
+    #             package = get_episode_package(packages, episode)
+    #             if not package[0] in result:
+    #                 result[package[0]] = [package[1]]
+    #             else:
+    #                 result[package[0]].append(package[1])
+    #     else:
+    #         table_data.append([idx + 1, show, colored("\u2714", 'green')])
+    # print(tabulate(table_data, headers=[
+    #     'idx', 'anime', 'status'], tablefmt='orgtbl'))
+    # if not result:
+    #     print(colored("<] nothing to do. [>\n", "green").center(80))
+    #     sys.exit(0)
     json_data = json.dumps(result)
     # debug print_json(json_data)
     print()
     key = input("press enter to start downloading...")
     if key == "":
-        server = (ISL.get_host(), ISL.get_port())
-        serverinfo = (server, ISL.get_user(),
-                      ISL.get_channel(), ISL.get_anime_folder())
-        host = ISL.get_host()
-        port = ISL.get_port()
-        user = ISL.get_user()
-        channel = ISL.get_channel()
-        download_dir = ISL.get_anime_folder()
-
-        irc = IrcLib(host, port, user, channel, download_dir, json_data)
-        irc.connect()
+        TcpDownloader(1, json_data)
+        compare(animes, cache)
 
 
 if __name__ == '__main__':
