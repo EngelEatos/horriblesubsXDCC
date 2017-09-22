@@ -10,8 +10,10 @@ class IrcSettingsLoader(JsonLoader):
         self.json_data = self.load()
 
     def create_config(self):
-        self.json_data = {"irc": {"host": "irc.rizon.net", "port": 6667, "channel": "#horriblesubs",
-                                  "user": "engeleatosbot2", "default_bot": "CR-RALEIGH|NEW", "default_res": "720p", "anime_folder": "G:/summer"}}
+        self.json_data = {"irc":
+                          {"host": "irc.rizon.net", "port": 6667, "channel": "#horriblesubs",
+                           "user": "engeleatosbot2", "default_bot": "CR-RALEIGH|NEW",
+                           "default_res": "720p", "anime_folder": "G:/summer"}}
         self.save()
 
     def get_irc_settings(self):
@@ -21,6 +23,11 @@ class IrcSettingsLoader(JsonLoader):
     def set_irc_settings(self, irc_settings):
         """set irc_settings"""
         self.set_json_data(self.change_key('irc', irc_settings))
+
+    def get_serverinfo(self):
+        """return serverinfo"""
+        return {"host": self.get_host(), "port": self.get_port(), "user": self.get_user(),
+                "channel": self.get_channel(), "anime_folder": self.get_anime_folder()}
 
     def get_host(self):
         """return host"""
