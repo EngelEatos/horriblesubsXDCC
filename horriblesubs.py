@@ -136,6 +136,7 @@ def print_json(data):
 
 
 def compare(animes, cache):
+    """compare with caching"""
     result = {}
     table_data = []
     for idx, show in enumerate(animes):
@@ -156,12 +157,13 @@ def compare(animes, cache):
         else:
             table_data.append([idx + 1, show, colored("\u2714", 'green')])
     print(tabulate(table_data, headers=[
-        'idx', 'anime', 'status'], tablefmt='orgtbl'))
-    if not result:
-        print()
-        print(colored("<] nothing to do. [>\n", "green").center(80))
-        sys.exit(0)
+        'idx', 'anime', 'status'], tablefmt='orgtbl') + "\n")
     return result, cache
+
+
+def cls():
+    """clear terminal"""
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 
 def main():
@@ -175,36 +177,19 @@ def main():
             colored(">[ configs failed to load. Exit ]<\n", "red").center(80))
         sys.exit(1)
     animes = ASL.get_watching()
-    result, cache = compare(animes, dict())
-    # result = {}
-    # table_data = []
-    # for idx, show in enumerate(animes):
-    #     packages = xdccparser.search(show, ISL.get_default_res())
-    #     local = get_local_episodes(show)
-    #     diff = get_diff_episodes(packages, local)
-    #     if diff:
-    #         table_data.append([idx + 1, show, colored(str(diff), 'red')])
-    #         for episode in diff:
-    #             delete_local_episodes(show, episode)
-    #             package = get_episode_package(packages, episode)
-    #             if not package[0] in result:
-    #                 result[package[0]] = [package[1]]
-    #             else:
-    #                 result[package[0]].append(package[1])
-    #     else:
-    #         table_data.append([idx + 1, show, colored("\u2714", 'green')])
-    # print(tabulate(table_data, headers=[
-    #     'idx', 'anime', 'status'], tablefmt='orgtbl'))
-    # if not result:
-    #     print(colored("<] nothing to do. [>\n", "green").center(80))
-    #     sys.exit(0)
-    json_data = json.dumps(result)
-    # debug print_json(json_data)
-    print()
-    key = input("press enter to start downloading...")
-    if key == "":
+    cache = dict()
+    result = True
+    while result:
+        cls()
+        result, cache = compare(animes, cache)
+        if not result:
+            print(colored("<] nothing to do. [>\n", "green").center(80))
+            sys.exit(0)
+        json_data = json.dumps(result)
+        key = input("press enter to start downloading...")
+        if key != "":
+            break
         TcpDownloader(1, json_data)
-        compare(animes, cache)
 
 
 if __name__ == '__main__':
