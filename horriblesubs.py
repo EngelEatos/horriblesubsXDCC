@@ -9,12 +9,12 @@ import colorama
 from tabulate import tabulate
 from termcolor import colored
 
-import xdccparser
 from animesettingsloader import AnimeSettingsLoader
 from irclib import IrcLib
 from ircsettingsloader import IrcSettingsLoader
 from packagehelper import get_diff_episodes, get_episode_package
 from tcpdownloader import tcpdownload
+from xdccparser import parse_name, search
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ def get_local_episodes(name):
     for episode in os.listdir(path):
         ep_path = os.path.join(path, episode)
         if os.path.isfile(ep_path):
-            anime = xdccparser.parse_name(episode)
+            anime = parse_name(episode)
             file_size = os.stat(ep_path).st_size
             episodes.append([anime, file_size])
     return episodes
@@ -59,7 +59,7 @@ def compare(animes, cache):
     result = {}
     table_data = []
     for idx, show in enumerate(animes):
-        packages = cache[show] if show in cache.keys() else xdccparser.search(
+        packages = cache[show] if show in cache.keys() else search(
             show, ISL.get_default_res())
         cache[show] = packages
         local = get_local_episodes(show)

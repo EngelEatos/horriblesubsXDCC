@@ -3,8 +3,8 @@ import os
 
 from beautifultable import BeautifulTable
 
-import showparser
 from animesettingsloader import AnimeSettingsLoader
+from showparser import get_airing_shows
 
 ASL = AnimeSettingsLoader()
 
@@ -37,7 +37,7 @@ def main():
     table.column_headers = ["idx", "anime", "subscribed"]
     data = []
 
-    shows = list(showparser.get_airing_shows().keys())
+    shows = list(get_airing_shows().keys())
     for idx, show in enumerate(shows):
         num = str(idx + 1).zfill(digits(len(shows)))
         if decide(num, show):
