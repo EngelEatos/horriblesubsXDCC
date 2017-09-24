@@ -1,7 +1,7 @@
 """Loader for Anime settings"""
 from datetime import datetime
 
-import showparser
+from showparser import get_airing_shows, get_all_shows
 from jsonloader import JsonLoader
 
 
@@ -14,8 +14,8 @@ class AnimeSettingsLoader(JsonLoader):
 
     def create_config(self):
         """create new config file"""
-        self.json_data = {"animes": {"watching": [], "airing": showparser.get_airing_shows(
-        ), "all": showparser.get_all_shows(), "modified_date": datetime.now()}}
+        self.json_data = {"animes": {"watching": [], "airing": get_airing_shows(
+        ), "all": get_all_shows(), "modified_date": datetime.now()}}
         self.save()
 
     def get_anime_settings(self):
@@ -58,8 +58,8 @@ class AnimeSettingsLoader(JsonLoader):
 
     def update(self):
         """update airing and all animes from website"""
-        self.set_airing(showparser.get_airing_shows())
-        self.set_all_anime(showparser.get_all_shows())
+        self.set_airing(get_airing_shows())
+        self.set_all_anime(get_all_shows())
         self.set_modified_date(datetime.now())
         self.save()
 
