@@ -1,9 +1,9 @@
 """calculates diff of local and online Animes episodes & download these via XDCC"""
 import json
 import logging
+import multiprocessing as mp
 import os
 import sys
-from random import randint
 
 import colorama
 from tabulate import tabulate
@@ -11,11 +11,13 @@ from termcolor import colored
 
 import xdccparser
 from animesettingsloader import AnimeSettingsLoader
+from irclib import IrcLib
 from ircsettingsloader import IrcSettingsLoader
-from tcpdownloader import TcpDownloader
+from packagehelper import get_diff_episodes, get_episode_package
+from tcpdownloader import tcpdownload
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 BASEURL = "http://horriblesubs.info"
 ISL = IrcSettingsLoader()
@@ -37,42 +39,6 @@ def get_local_episodes(name):
     return episodes
 
 
-def distinct_packages(packages):
-    """return a distinct list of the packages"""
-    result = []
-    eps = []
-    for package in packages:
-        if package[3][2] not in eps:
-            eps.append(package[3][2])
-            result.append(package)
-    return result
-
-
-def get_size(local, episode):
-    """return the size of ep in local episodes"""
-    for local_ep in local:
-        if local_ep[0][2] == episode:
-            return local_ep[1]
-    return -1
-
-
-def get_diff_episodes(packages, local):
-    """return the difference between the folder of packages and local"""
-    todo = []
-    local_eps = [l[0][2] for l in local]
-    packages = distinct_packages(packages)
-    for package in packages:
-        episode = package[3][2]
-        size = int(package[2])
-        if episode in local_eps:
-            local_size = int(get_size(local, episode) / (1024 * 1024))
-            # print(str(size) + " =?= " + str(local_size))
-            if size - 50 <= local_size <= size + 50:
-                continue
-        todo.append(episode)
-    return todo
-
-
 def delete_local_episodes(anime, episode):
     """delete the local ep"""
     filename = "[HorribleSubs] " + anime + " - " + episode + " [720p].mkv"
@@ -80,53 +46,6 @@ def delete_local_episodes(anime, episode):
     if os.path.isfile(path):
         print("REMOVE: '%s'" % path)
         os.remove(path)
-
-
-def get_packages_by_ep(packages, episode):
-    """return package by episode number"""
-    result = []
-    version_result = []
-    for package in packages:
-        if package[3][2] == episode:
-            if package[3][3]:
-                version_result.append(package)
-            else:
-                result.append(package)
-    return (result, version_result)
-
-
-def get_latest_packages(version_result):
-    """return latest package, use versioning"""
-    packs = []
-    version_max = 0
-    for result in version_result:
-        version = int(result[3][3][1:])
-        if version < version_max:
-            continue
-        if version > version_max:
-            packs.clear()
-            version_max = version
-        packs.append(result)
-    return packs
-
-
-def get_packages(packages):
-    """get matching package"""
-    selected = []
-    for package in packages:
-        if package[0] == ISL.get_default_bot():
-            return package
-        else:
-            selected.append(package)
-    return selected[randint(0, len(selected) - 1)]
-
-
-def get_episode_package(packages, episode):
-    """get availible package of episode, first default then random"""
-    (result, version_result) = get_packages_by_ep(packages, episode)
-    packages = get_latest_packages(
-        version_result) if version_result else result
-    return get_packages(packages)
 
 
 def print_json(data):
@@ -166,6 +85,15 @@ def cls():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
+def check_irc(irc_queue_in, irc_queue_out):
+    """check if irc thread is ready to retrieve commands"""
+    status = ""
+    while status != "letgo":
+        irc_queue_in.put("ready")
+        status = irc_queue_out.get()
+    irc_queue_in.put("clear")
+
+
 def main():
     """main"""
     colorama.init()
@@ -179,17 +107,28 @@ def main():
     animes = ASL.get_watching()
     cache = dict()
     result = True
+    manager = mp.Manager()
+    irc_queue_in = manager.Queue()
+    irc_queue_out = manager.Queue()
+    irc = IrcLib(ISL, irc_queue_in, irc_queue_out, logger)
+    irc.start()
+    check_irc(irc_queue_in, irc_queue_out)
+
     while result:
-        cls()
         result, cache = compare(animes, cache)
         if not result:
             print(colored("<] nothing to do. [>\n", "green").center(80))
-            sys.exit(0)
+            break
         json_data = json.dumps(result)
         key = input("press enter to start downloading...")
         if key != "":
             break
-        TcpDownloader(1, json_data)
+        tcpdownload(irc_queue_in, irc_queue_out, json_data)
+        key = input("press enter to rescan...")
+        if key != "":
+            break
+        cls()
+    irc_queue_in.put("exit")
 
 
 if __name__ == '__main__':

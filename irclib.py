@@ -5,33 +5,31 @@ import os
 import re
 import socket
 import sys
-import threading
-from queue import Queue
+from threading import Thread
 
 from pyee import EventEmitter
 
 from xdccparser import parse_name
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
 
-
-class IrcLib():
+class IrcLib(Thread):
     """IrcLib"""
     ee = EventEmitter()
 
-    def __init__(self, isl):
+    def __init__(self, isl, queue_in, queue_out, logger):
+        Thread.__init__(self)
+        self.logger = logger or logging.getLogger(__name__)
         self.socket = socket.socket()
         self.serverinfo = isl.get_serverinfo()
-        self.queue = Queue()
+        self.queue_in = queue_in
+        self.queue_out = queue_out
         self.active = False
         self.whois = dict()
         self.joined = False
-        self.receive_thread = threading.Thread(target=self.receive)
 
     def send_raw(self, msg):
         """send raw message"""
-        logging.debug("< %s\n", msg)
+        self.logger.debug("< %s\n", msg)
         self.socket.sendall(bytes("%s\n" % msg, "UTF-8"))
 
     def privmsg(self, target, msg):
@@ -42,6 +40,9 @@ class IrcLib():
         """request xdcc package"""
         self.privmsg(bot, "xdcc send #" + package)
 
+    def run(self):
+        self.connect()
+
     def connect(self):
         """"connect to host, port"""
         host = self.serverinfo['host']
@@ -51,11 +52,11 @@ class IrcLib():
         self.send_raw("NICK %s" % user)
         self.send_raw("USER %s %s %s %s" % (user, host, server, user))
         self.active = True
-        self.receive_thread.start()
+        self.receive()
 
-    def join(self):
+    def join_channel(self):
         """join channel"""
-        logging.debug("send_join")
+        self.logger.debug("send_join")
         self.send_raw("JOIN %s" % self.serverinfo['channel'])
 
     def quit(self):
@@ -78,7 +79,7 @@ class IrcLib():
     @ee.on('irclib.ctcp')
     def on_ctcp(self, match):
         """on incoming ctcp request"""
-        logging.debug("on_ctcp")
+        self.logger.debug("on_ctcp")
         match_list = [match.group(i)
                       for i in range(len(match.groups()) + 1)][1:]
         filename, host, port, size = match_list
@@ -87,8 +88,8 @@ class IrcLib():
         host = str(ipaddress.ip_address(int(host)))
         download_path = os.path.join(
             self.serverinfo['anime_folder'], parse_name(filename)[1], filename)
-        print("%s %s %s %s" % (host, port, filename, size))
-        self.queue.put([(host, int(port)), int(size), download_path])
+        #print("%s %s %s %s" % (host, port, filename, size))
+        self.queue_out.put([(host, int(port)), int(size), download_path])
 
     @ee.on('irclib.message.received')
     def on_message_received(self, msg, matches):
@@ -98,7 +99,7 @@ class IrcLib():
         if match and len(match.groups()) >= 4:
             self.ee.emit('irclib.ctcp', self, match)
         else:
-            logging.debug(msg)
+            self.logger.debug(msg)
 
     @ee.on('irclib.logged.in')
     def on_logged_in(self):
@@ -108,25 +109,25 @@ class IrcLib():
     @ee.on('irclib.join.successfull')
     def on_successfull_join(self):
         """event on successfull join"""
-        logging.debug("join sucessfull")
+        self.logger.debug("join sucessfull")
         self.joined = True
 
     @ee.on('irclib.motd.end')
     def on_motd_end(self):
         """event on incoming motd message"""
-        logging.debug("on_motd_end")
-        self.join()
+        self.logger.debug("on_motd_end")
+        self.join_channel()
 
     @ee.on('irclib.data')
     def on_data(self, line):
         """event on incoming unkown data"""
-        logging.debug(line)
+        self.logger.debug(line)
 
     @ee.on('irclib.bot.info')
     def on_bot_info(self, matches):
         """event on incoming bot info"""
-        logging.debug(matches.groups())
-        logging.debug(self.active)
+        self.logger.debug(matches.groups())
+        self.logger.debug(self.active)
         # msg[msg.find('~'):msg.rfind(' ')].replace(' ', '@'))
 
     @ee.on('irclib.nick.error')
@@ -140,22 +141,22 @@ class IrcLib():
         """switch-case for incoming messages"""
         case = int(matches[2])
         if str(case) == "004":
-            logging.debug("reply-logged")
+            self.logger.debug("reply-logged")
             self.ee.emit('irclib.logged.in', self)
         elif case == 311:
-            logging.debug("reply-bot-info-received")
+            self.logger.debug("reply-bot-info-received")
             self.ee.emit('irclib.bot.info', self, matches)
         elif case == 332:
-            logging.debug("reply-join")
+            self.logger.debug("reply-join")
             self.ee.emit('irclib.join.successfull', self)
         elif case == 376:
-            logging.debug("reply-motd")
+            self.logger.debug("reply-motd")
             self.ee.emit('irclib.motd.end', self)
         elif case == 443:
-            logging.debug("reply-nick")
+            self.logger.debug("reply-nick")
             self.ee.emit('irclib.nick.error', self)
         else:
-            logging.debug(matches.groups())
+            self.logger.debug(matches.groups())
 
     @ee.on('irclib.socket.data')
     def socket_on_data(self, data):
@@ -165,7 +166,7 @@ class IrcLib():
 
         lines = data.split("\n")
         for line in lines:
-            logging.debug(line)
+            self.logger.debug(line)
             matches = re.match(reply_pattern, line)
             if matches and len(matches.groups()) >= 4:
                 self.ee.emit('irclib.reply', self, matches)
@@ -190,4 +191,16 @@ class IrcLib():
             if not data:
                 continue
             self.ee.emit('irclib.socket.data', self, data)
+            if self.queue_in.empty():
+                continue
+            cmd = self.queue_in.get().split(" ")
+            if cmd[0] == "ready":
+                self.queue_out.put("letgo" if self.joined else "no")
+            elif cmd[0] == "xdcc_request":
+                self.request_xdcc(cmd[1], cmd[2])
+            elif cmd[0] == "exit":
+                break
+            elif cmd[0] == "clear":
+                while not self.queue_out.empty():
+                    self.queue_out.get()
         self.ee.emit('irclbi.receive.exit', self)
