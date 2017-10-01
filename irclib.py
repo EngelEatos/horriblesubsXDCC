@@ -10,6 +10,7 @@ from threading import Thread
 from pyee import EventEmitter
 
 from xdccparser import parse_name
+logging.basicConfig(level=logging.INFO)
 
 
 class IrcLib(Thread):
@@ -18,7 +19,7 @@ class IrcLib(Thread):
 
     def __init__(self, isl, queue_in, queue_out, logger):
         Thread.__init__(self)
-        self.logger = logger or logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__)
         self.socket = socket.socket()
         self.serverinfo = isl.get_serverinfo()
         self.queue_in = queue_in
@@ -121,7 +122,8 @@ class IrcLib(Thread):
     @ee.on('irclib.data')
     def on_data(self, line):
         """event on incoming unkown data"""
-        self.logger.debug(line)
+        #self.logger.debug(line)
+        pass
 
     @ee.on('irclib.bot.info')
     def on_bot_info(self, matches):
@@ -166,7 +168,6 @@ class IrcLib(Thread):
 
         lines = data.split("\n")
         for line in lines:
-            self.logger.debug(line)
             matches = re.match(reply_pattern, line)
             if matches and len(matches.groups()) >= 4:
                 self.ee.emit('irclib.reply', self, matches)
@@ -179,6 +180,8 @@ class IrcLib(Thread):
                 if matches:
                     msg = str(matches.group(2) + ": " + matches.group(3))
                     self.ee.emit('irclib.message.received', self, msg, matches)
+            elif "NOTICE" in line:
+                self.logger.debug(line)
             else:
                 self.ee.emit('irclib.data', self, line)
 

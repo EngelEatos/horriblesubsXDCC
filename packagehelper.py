@@ -1,19 +1,19 @@
 from random import randint
 
 
-def get_episode_package(packages, episode):
+def get_episode_package(packages, episode, default_bot):
     """get availible package of episode, first default then random"""
     (result, version_result) = get_packages_by_ep(packages, episode)
     packages = get_latest_packages(
         version_result) if version_result else result
-    return get_packages(packages)
+    return get_packages(packages, default_bot)
 
 
-def get_packages(packages):
+def get_packages(packages, default_bot):
     """get matching package"""
     selected = []
     for package in packages:
-        if package[0] == ISL.get_default_bot():
+        if package[0] == default_bot:
             return package
         else:
             selected.append(package)
