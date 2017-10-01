@@ -68,7 +68,8 @@ def compare(animes, cache):
             table_data.append([idx + 1, show, colored(str(diff), 'red')])
             for episode in diff:
                 delete_local_episodes(show, episode)
-                package = get_episode_package(packages, episode)
+                package = get_episode_package(
+                    packages, episode, ISL.get_default_bot())
                 if not package[0] in result:
                     result[package[0]] = [package[1]]
                 else:
@@ -104,6 +105,9 @@ def main():
         print(
             colored(">[ configs failed to load. Exit ]<\n", "red").center(80))
         sys.exit(1)
+    if not os.path.isdir(ISL.get_anime_folder()):
+        print(colored("anime folder not found.\n", "red"))
+        sys.exit(1)
     animes = ASL.get_watching()
     cache = dict()
     result = True
@@ -113,7 +117,6 @@ def main():
     irc = IrcLib(ISL, irc_queue_in, irc_queue_out, logger)
     irc.start()
     check_irc(irc_queue_in, irc_queue_out)
-
     while result:
         result, cache = compare(animes, cache)
         if not result:

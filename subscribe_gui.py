@@ -11,13 +11,16 @@ ANIME_LOADER = AnimeSettingsLoader()
 
 def save():
     """save selected animes to file"""
+    print("SAVING")
     selected_animes = CHECKVAR.keys()
     result = []
     for anime in selected_animes:
         if CHECKVAR.get(anime).get() == 1:
             result.append(anime)
+    print(result)
     ANIME_LOADER.set_watching(result)
     ANIME_LOADER.update_modified_date()
+    ANIME_LOADER.save()
     ROOT.quit()
 
 
@@ -45,7 +48,7 @@ class Frame(tk.Frame):  # pylint: disable=too-many-ancestors
                 check_btn.toggle()
             self.text.window_create("end", window=check_btn)
             self.text.insert("end", "\n")
-        self.btn = tk.Button(text='save', command=save())
+        self.btn = tk.Button(text='save', command=lambda: save())
         self.btn.pack(side="bottom", fill="both", expand=True)
         self.text.config(state="disabled")
 
