@@ -22,7 +22,7 @@ class JsonLoader():
         """load json from file"""
         if not os.path.isfile(self.config_file):
             self.create_config()
-        with open(self.config_file, 'r') as config:
+        with open(self.config_file, 'r', encoding='utf-8') as config:
             return json.load(config, object_hook=json_serial)
 
     def is_loaded(self):
@@ -53,9 +53,12 @@ class JsonLoader():
 
     def write_json_to_file(self, data):
         """write json to file"""
+        # json_data = json.dumps(data, default=json_serial,
+        #                       indent=4, sort_keys=True).encode('utf-8')
         with open(self.config_file, 'w', encoding='utf-8') as outfile:
             json.dump(data, outfile, ensure_ascii=False,
                       default=json_serial, indent=4, sort_keys=True)
+            # outfile.write(json_data)
 
     def change_key(self, key, value, json_data=None):
         """change value of key in json"""

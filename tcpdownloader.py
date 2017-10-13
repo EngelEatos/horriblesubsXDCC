@@ -1,12 +1,13 @@
 """downloader class"""
 import json
 import logging
+import os
 import socket
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from tqdm import tqdm
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("tcpdownloader")
 
 
@@ -17,7 +18,7 @@ def download(item, irc_queue_in, irc_queue_out):
     (server), size, path = irc_queue_out.get()
     path = path.replace("Knight_s & Magic", "Knight's & Magic")
     if not os.path.isdir(os.path.dirname(path)):
-        os.path.makedirs(os.path.dirname(path))
+        os.makedirs(os.path.dirname(path))
     logger.debug(str(server), size, path)
     tcp_socket = socket.socket()
     tcp_socket.connect(server)

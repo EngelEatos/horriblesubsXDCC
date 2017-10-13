@@ -57,9 +57,9 @@ def check_expired(date):
     """check if config file is older than 10h"""
     if not date:
         return None
-    delta = date - datetime.now()
+    delta = datetime.now() - date
     mod = divmod(delta.days * 86400 + delta.seconds, 60)
-    return mod[0] >= 600
+    return int(mod[0]) >= 600
 
 
 def main():

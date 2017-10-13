@@ -75,7 +75,8 @@ def compare(animes, cache):
                 else:
                     result[package[0]].append(package[1])
         else:
-            table_data.append([idx + 1, show, colored("\u2714", 'green')])
+            table_data.append(
+                [idx + 1, show, colored("ok" if os.name == 'nt' else "\u2714", 'green')])
     print(tabulate(table_data, headers=[
         'idx', 'anime', 'status'], tablefmt='orgtbl') + "\n")
     return result, cache
