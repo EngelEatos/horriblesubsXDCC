@@ -13,7 +13,8 @@ class IrcSettingsLoader(JsonLoader):
         self.json_data = {"irc":
                           {"host": "irc.rizon.net", "port": 6667, "channel": "#horriblesubs",
                            "user": "engeleatosbot2", "default_bot": "CR-RALEIGH|NEW",
-                           "default_res": "720p", "anime_folder": "G:/summer"}}
+                           "default_res": "720p", "anime_folder": "/mnt/media/airing/",
+                           "multiprocessing": 0}}
         self.save()
 
     def get_irc_settings(self):
@@ -26,8 +27,7 @@ class IrcSettingsLoader(JsonLoader):
 
     def get_serverinfo(self):
         """return serverinfo"""
-        return {"host": self.get_host(), "port": self.get_port(), "user": self.get_user(),
-                "channel": self.get_channel(), "anime_folder": self.get_anime_folder()}
+        return self.get_irc_settings()
 
     def get_host(self):
         """return host"""
@@ -93,4 +93,13 @@ class IrcSettingsLoader(JsonLoader):
     def set_anime_folder(self, anime_folder):
         """set anime_folder"""
         self.set_irc_settings(self.change_key(
-            "anime_folder", anime_folder, self.get_irc_settings()))
+            'anime_folder', anime_folder, self.get_irc_settings()))
+
+    def get_multiprocessing(self):
+        """return bool multiprocessing"""
+        return self.get_value('multiprocessing', self.get_irc_settings())
+
+    def set_multiprocessing(self, bool_multiprocessing):
+        """set bool multiprocessing"""
+        self.set_irc_settings(self.change_key(
+            'multiprocessing', bool_multiprocessing, self.get_irc_settings()))

@@ -17,7 +17,7 @@ class IrcLib(Thread):
     """IrcLib"""
     ee = EventEmitter()
 
-    def __init__(self, isl, queue_in, queue_out, logger):
+    def __init__(self, isl, queue_in, queue_out):
         Thread.__init__(self)
         self.logger = logging.getLogger(__name__)
         self.socket = socket.socket()
@@ -25,7 +25,7 @@ class IrcLib(Thread):
         self.queue_in = queue_in
         self.queue_out = queue_out
         self.active = False
-        self.whois = dict()
+        #self.whois = dict()
         self.joined = False
 
     def send_raw(self, msg):
@@ -122,7 +122,7 @@ class IrcLib(Thread):
     @ee.on('irclib.data')
     def on_data(self, line):
         """event on incoming unkown data"""
-        #self.logger.debug(line)
+        # self.logger.debug(line)
         pass
 
     @ee.on('irclib.bot.info')

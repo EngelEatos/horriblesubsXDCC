@@ -54,7 +54,7 @@ class AnimeSettingsLoader(JsonLoader):
     def set_all_anime(self, all_anime):
         """set all animes"""
         self.set_anime_settings(self.change_key(
-            'all', all_anime, self.get_anime_settings))
+            'all', all_anime, self.get_anime_settings()))
 
     def update(self):
         """update airing and all animes from website"""

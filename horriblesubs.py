@@ -13,11 +13,11 @@ from animesettingsloader import AnimeSettingsLoader
 from irclib import IrcLib
 from ircsettingsloader import IrcSettingsLoader
 from packagehelper import get_diff_episodes, get_episode_package
-from tcpdownloader import tcpdownload
+from tcpdownloader import tcpdownload, tcpdownload_one
 from xdccparser import parse_name, search
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+
 
 BASEURL = "http://horriblesubs.info"
 ISL = IrcSettingsLoader()
@@ -54,14 +54,12 @@ def print_json(data):
     print(json.dumps(parsed, indent=4, sort_keys=True))
 
 
-def compare(animes, cache):
+def check_animes(animes):
     """compare with caching"""
     result = {}
     table_data = []
     for idx, show in enumerate(animes):
-        packages = cache[show] if show in cache.keys() else search(
-            show, ISL.get_default_res())
-        cache[show] = packages
+        packages = search(show, ISL.get_default_res())
         local = get_local_episodes(show)
         diff = get_diff_episodes(packages, local)
         if diff:
@@ -79,7 +77,7 @@ def compare(animes, cache):
                 [idx + 1, show, colored("ok" if os.name == 'nt' else "\u2714", 'green')])
     print(tabulate(table_data, headers=[
         'idx', 'anime', 'status'], tablefmt='orgtbl') + "\n")
-    return result, cache
+    return result
 
 
 def cls():
@@ -96,9 +94,9 @@ def check_irc(irc_queue_in, irc_queue_out):
     irc_queue_in.put("clear")
 
 
-def main():
-    """main"""
-    colorama.init()
+def boot_up():
+    """boot up. ASL ISL anime folder"""
+    cls()
     if ASL.is_loaded() and ISL.is_loaded():
         print(
             colored("<] configs successfull loaded [>\n", "green").center(80))
@@ -109,29 +107,36 @@ def main():
     if not os.path.isdir(ISL.get_anime_folder()):
         print(colored("anime folder not found.\n", "red"))
         sys.exit(1)
-    animes = ASL.get_watching()
-    cache = dict()
-    result = True
+
+
+def setup_irc():
+    """setup irc"""
     manager = mp.Manager()
     irc_queue_in = manager.Queue()
     irc_queue_out = manager.Queue()
-    irc = IrcLib(ISL, irc_queue_in, irc_queue_out, logger)
+    irc = IrcLib(ISL, irc_queue_in, irc_queue_out)
     irc.start()
     check_irc(irc_queue_in, irc_queue_out)
-    while result:
-        result, cache = compare(animes, cache)
-        if not result:
-            print(colored("<] nothing to do. [>\n", "green").center(80))
-            break
+    return irc_queue_in, irc_queue_out
+
+
+def main():
+    """main"""
+    colorama.init()
+    boot_up()
+    animes = ASL.get_watching()
+    irc_queue_in, irc_queue_out = setup_irc()
+
+    result = check_animes(animes)
+    if not result:
+        print(colored("<] nothing to do. [>\n", "green").center(80))
+    else:
         json_data = json.dumps(result)
-        key = input("press enter to start downloading...")
-        if key != "":
-            break
-        tcpdownload(irc_queue_in, irc_queue_out, json_data)
-        key = input("press enter to rescan...")
-        if key != "":
-            break
-        cls()
+        if input("press enter to start downloading...") == "":
+            if ISL.get_multiprocessing() == 0:
+                tcpdownload_one(irc_queue_in, irc_queue_out, json_data)
+            else:
+                tcpdownload(irc_queue_in, irc_queue_out, json_data)
     irc_queue_in.put("exit")
 
 
