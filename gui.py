@@ -9,11 +9,8 @@ from animeinfo import AnimeInfo
 from animesettingsloader import AnimeSettingsLoader
 
 
-ANIME_LOADER = AnimeSettingsLoader()
-
-
 class AnimeInfoWindow(Gtk.Dialog):
-    """gtk3 window"""
+    """gtk3 dialog"""
 
     def __init__(self, parent, name, url):
         Gtk.Dialog.__init__(self, name, parent, 0,
@@ -58,15 +55,15 @@ class AnimeInfoWindow(Gtk.Dialog):
 class SubWindow(Gtk.Window):
     """gtk3 window"""
 
-    def __init__(self, airing, watching):
+    def __init__(self, anime_loader):
         Gtk.Window.__init__(self, title="Subsribe GUI")
         self.set_default_size(420, 500)
         self.set_resizable(False)
         self.liststore = Gtk.ListStore(str, bool)
-        self.airing = airing
-        for anime in self.airing.keys():
-            self.liststore.append(
-                [anime, True if anime in watching else False])
+        self.anime_loader = anime_loader
+        self.airing = anime_loader.get_airing()
+        self.all_anime = anime_loader.get_all_anime()
+
         treeview = Gtk.TreeView(model=self.liststore)
         treeview.connect('row-activated', self.on_row_activated)
         renderer_text = Gtk.CellRendererText()
@@ -91,12 +88,27 @@ class SubWindow(Gtk.Window):
         save_btn.connect("clicked", self.on_save_clicked)
         save_btn.set_size_request(80, 25)
 
+        animes_combo = Gtk.ComboBoxText()
+        animes_combo.connect("changed", self.on_anime_combo_changed)
+        animes_combo.append_text('only airing animes')
+        animes_combo.append_text('all animes')
+        animes_combo.set_active(0)
+
         self.mainbox = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL, spacing=10)
         self.add(self.mainbox)
-
+        self.mainbox.pack_start(animes_combo, False, False, 0)
         self.mainbox.pack_start(scrolled_window, True, True, 0)
         self.mainbox.pack_start(save_btn, False, False, 0)
+
+    def load_anime(self, anime_category):
+        """load anime"""
+        self.liststore.clear()
+        animes = self.all_anime if anime_category == 'all animes' else self.airing
+        watching = self.anime_loader.get_watching()
+        for anime in animes.keys():
+            self.liststore.append(
+                [anime, True if anime in watching else False])
 
     def on_row_activated(self, widget, path, column):
         """on row activated"""
@@ -121,10 +133,16 @@ class SubWindow(Gtk.Window):
             treeiter = self.liststore.get_iter(i)
             if self.liststore.get_value(treeiter, 1):
                 result.append(self.liststore.get_value(treeiter, 0))
-        ANIME_LOADER.set_watching(result)
-        ANIME_LOADER.update_modified_date()
-        ANIME_LOADER.save()
+        self.anime_loader.set_watching(result)
+        self.anime_loader.update_modified_date()
+        self.anime_loader.save()
         Gtk.main_quit()
+
+    def on_anime_combo_changed(self, combo):
+        """on anime combobox changed"""
+        active_text = combo.get_active_text()
+        if active_text:
+            self.load_anime(active_text)
 
 
 def check_expired(date):
@@ -138,12 +156,11 @@ def check_expired(date):
 
 def main():
     """main"""
-    modified_date = ANIME_LOADER.get_modified_date()
+    anime_loader = AnimeSettingsLoader()
+    modified_date = anime_loader.get_modified_date()
     if check_expired(modified_date):
-        ANIME_LOADER.update()
-    airing = ANIME_LOADER.get_airing()
-    watching = ANIME_LOADER.get_watching()
-    win = SubWindow(airing, watching)
+        anime_loader.update()
+    win = SubWindow(anime_loader)
     win.connect("delete-event", Gtk.main_quit)
     win.show_all()
     Gtk.main()
