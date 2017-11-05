@@ -1,3 +1,4 @@
+"""packagehelper"""
 from random import randint
 
 
