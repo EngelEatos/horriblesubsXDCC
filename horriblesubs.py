@@ -125,19 +125,19 @@ def main():
     colorama.init()
     boot_up()
     animes = ASL.get_watching()
-    irc_queue_in, irc_queue_out = setup_irc()
 
     result = check_animes(animes)
     if not result:
         print(colored("<] nothing to do. [>\n", "green").center(80))
     else:
+        irc_queue_in, irc_queue_out = setup_irc()
         json_data = json.dumps(result)
         if input("press enter to start downloading...") == "":
             if ISL.get_multiprocessing() == 0:
                 tcpdownload_one(irc_queue_in, irc_queue_out, json_data)
             else:
                 tcpdownload(irc_queue_in, irc_queue_out, json_data)
-    irc_queue_in.put("exit")
+        irc_queue_in.put("exit")
 
 
 if __name__ == '__main__':
