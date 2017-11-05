@@ -11,13 +11,11 @@ ANIME_LOADER = AnimeSettingsLoader()
 
 def save():
     """save selected animes to file"""
-    print("SAVING")
     selected_animes = CHECKVAR.keys()
     result = []
     for anime in selected_animes:
         if CHECKVAR.get(anime).get() == 1:
             result.append(anime)
-    print(result)
     ANIME_LOADER.set_watching(result)
     ANIME_LOADER.update_modified_date()
     ANIME_LOADER.save()

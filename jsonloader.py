@@ -53,12 +53,11 @@ class JsonLoader():
 
     def write_json_to_file(self, data):
         """write json to file"""
-        # json_data = json.dumps(data, default=json_serial,
-        #                       indent=4, sort_keys=True).encode('utf-8')
+        if not os.path.isdir(os.path.dirname(self.config_file)):
+            os.makedirs(os.path.dirname(self.config_file))
         with open(self.config_file, 'w', encoding='utf-8') as outfile:
             json.dump(data, outfile, ensure_ascii=False,
                       default=json_serial, indent=4, sort_keys=True)
-            # outfile.write(json_data)
 
     def change_key(self, key, value, json_data=None):
         """change value of key in json"""

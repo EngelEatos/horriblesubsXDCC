@@ -1,0 +1,10 @@
+requests==2.18.4
+tqdm==4.19.4
+tabulate==0.8.1
+termcolor==1.1.0
+cfscrape==1.9.0
+colorama==0.3.9
+pyee==3.0.3
+pyparsing==2.2.0
+beautifulsoup4==4.6.0
+gi==1.2
