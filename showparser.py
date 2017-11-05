@@ -1,6 +1,4 @@
 """requests source and parse all/airing shows """
-import re
-
 import cfscrape
 import requests
 from bs4 import BeautifulSoup as bs
