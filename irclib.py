@@ -88,7 +88,7 @@ class IrcLib(Thread):
         filename = filename[1:-1] if '"' in filename else filename
         host = str(ipaddress.ip_address(int(host)))
         download_path = os.path.join(
-            self.serverinfo['anime_folder'], parse_name(filename)[1], filename)
+            self.serverinfo['anime_folder'], parse_name(filename)["anime"], filename)
         #print("%s %s %s %s" % (host, port, filename, size))
         self.queue_out.put([(host, int(port)), int(size), download_path])
 

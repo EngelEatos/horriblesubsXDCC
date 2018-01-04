@@ -14,7 +14,7 @@ def get_packages(packages, default_bot):
     """get matching package"""
     selected = []
     for package in packages:
-        if package[0] == default_bot:
+        if package["bot"] == default_bot:
             return package
         else:
             selected.append(package)
@@ -26,7 +26,7 @@ def get_latest_packages(version_result):
     packs = []
     version_max = 0
     for result in version_result:
-        version = int(result[3][3][1:])
+        version = int(result["version"][1:])
         if version < version_max:
             continue
         if version > version_max:
@@ -41,8 +41,8 @@ def get_packages_by_ep(packages, episode):
     result = []
     version_result = []
     for package in packages:
-        if package[3][2] == episode:
-            if package[3][3]:
+        if package["episode"] == episode:
+            if package["version"]:
                 version_result.append(package)
             else:
                 result.append(package)
@@ -51,19 +51,18 @@ def get_packages_by_ep(packages, episode):
 
 def get_diff_episodes(packages, local):
     """return the difference between the folder of packages and local"""
-    todo = []
-    local_eps = [l[0][2] for l in local]
+    result = []
+    local_eps = [l[0]["episode"] for l in local]
     packages = distinct_packages(packages)
     for package in packages:
-        episode = package[3][2]
-        size = int(package[2])
+        episode = package["episode"]
+        size = int(package["size"])
         if episode in local_eps:
             local_size = int(get_size(local, episode) / (1024 * 1024))
-            # print(str(size) + " =?= " + str(local_size))
             if size - 50 <= local_size <= size + 50:
                 continue
-        todo.append(episode)
-    return todo
+        result.append(episode)
+    return result
 
 
 def distinct_packages(packages):
@@ -71,8 +70,8 @@ def distinct_packages(packages):
     result = []
     eps = []
     for package in packages:
-        if package[3][2] not in eps:
-            eps.append(package[3][2])
+        if package["episode"] not in eps:
+            eps.append(package["episode"])
             result.append(package)
     return result
 
@@ -80,6 +79,6 @@ def distinct_packages(packages):
 def get_size(local, episode):
     """return the size of ep in local episodes"""
     for local_ep in local:
-        if local_ep[0][2] == episode:
+        if local_ep[0]["episode"] == episode:
             return local_ep[1]
     return -1
