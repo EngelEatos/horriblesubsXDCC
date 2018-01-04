@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """calculates diff of local and online Animes episodes & download these via XDCC"""
 import json
 import logging
@@ -30,6 +31,7 @@ def get_local_episodes(name):
     path = os.path.join(ISL.get_anime_folder(), name)
     if not os.path.isdir(path):
         os.makedirs(path)
+        return episodes
     for episode in os.listdir(path):
         ep_path = os.path.join(path, episode)
         if os.path.isfile(ep_path):
@@ -56,7 +58,7 @@ def print_json(data):
 
 def check_animes(animes):
     """compare with caching"""
-    result = {}
+    result = []
     table_data = []
     for idx, show in enumerate(animes):
         packages = search(show, ISL.get_default_res())
@@ -68,10 +70,7 @@ def check_animes(animes):
                 delete_local_episodes(show, episode)
                 package = get_episode_package(
                     packages, episode, ISL.get_default_bot())
-                if not package[0] in result:
-                    result[package[0]] = [package[1]]
-                else:
-                    result[package[0]].append(package[1])
+                result.append(package)
         else:
             table_data.append(
                 [idx + 1, show, colored("ok" if os.name == 'nt' else "\u2714", 'green')])
@@ -126,17 +125,16 @@ def main():
     boot_up()
     animes = ASL.get_watching()
 
-    result = check_animes(animes)
-    if not result:
+    data = check_animes(animes)
+    if not data:
         print(colored("<] nothing to do. [>\n", "green").center(80))
     else:
         irc_queue_in, irc_queue_out = setup_irc()
-        json_data = json.dumps(result)
         if input("press enter to start downloading...") == "":
             if ISL.get_multiprocessing() == 0:
-                tcpdownload_one(irc_queue_in, irc_queue_out, json_data)
+                tcpdownload_one(irc_queue_in, irc_queue_out, data)
             else:
-                tcpdownload(irc_queue_in, irc_queue_out, json_data)
+                tcpdownload(irc_queue_in, irc_queue_out, data)
         irc_queue_in.put("exit")
 
 
