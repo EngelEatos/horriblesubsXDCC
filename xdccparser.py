@@ -46,6 +46,7 @@ def parse_name(name):
                 "version": matches[4], "resolution": matches[5]}
     return None
 
+
 def get_content(url):
     """get content - cfscrape"""
     request = requests.get(url)

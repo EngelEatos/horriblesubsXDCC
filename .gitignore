@@ -51,3 +51,4 @@ docs/_build/
 # custom
 cache/
 settings/
+venv/
