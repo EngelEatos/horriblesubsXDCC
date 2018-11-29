@@ -125,7 +125,8 @@ def main():
     colorama.init()
     boot_up()
     animes = ASL.get_watching()
-
+    if len(animes) <= 0:
+        print("no subscribed animes. 'python sub_gui.py' for gui or animes.json")
     data = check_animes(animes)
     if not data:
         print(colored("<] nothing to do. [>\n", "green").center(80))

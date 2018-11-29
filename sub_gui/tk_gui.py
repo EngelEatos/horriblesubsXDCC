@@ -27,6 +27,7 @@ class Frame(tk.Frame):  # pylint: disable=too-many-ancestors
 
     def __init__(self, root, airing, watching, *args, **kwargs):
         tk.Frame.__init__(self, root, *args, **kwargs)
+        self.winfo_toplevel().title("subscribe gui")
         self.root = root
         self.airing = airing
         self.watching = watching

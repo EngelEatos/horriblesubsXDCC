@@ -6,7 +6,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
 from animeinfo import AnimeInfo
-from animesettingsloader import AnimeSettingsLoader
+from configloader.animesettingsloader import AnimeSettingsLoader
 
 
 class AnimeInfoWindow(Gtk.Dialog):
