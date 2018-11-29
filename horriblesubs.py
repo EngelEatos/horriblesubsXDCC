@@ -10,6 +10,7 @@ import colorama
 from tabulate import tabulate
 from termcolor import colored
 
+
 from configloader.animesettingsloader import AnimeSettingsLoader
 from lib.irclib import IrcLib
 from configloader.ircsettingsloader import IrcSettingsLoader
