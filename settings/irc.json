@@ -1,0 +1,12 @@
+{
+    "irc": {
+        "anime_folder": "C:\\Users\\chaos\\Downloads\\horriblesubsXDCC-master\\anime",
+        "channel": "#horriblesubs",
+        "default_bot": "CR-RALEIGH|NEW",
+        "default_res": "720p",
+        "host": "irc.rizon.net",
+        "multiprocessing": 0,
+        "port": 6667,
+        "user": "engeleatosbot2"
+    }
+}

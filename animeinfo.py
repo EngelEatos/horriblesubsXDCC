@@ -1,8 +1,10 @@
 """animeinfo"""
 import os
 import requests
+
 from lib.showparser import get_soup
 from configloader.jsonloader import JsonLoader
+
 
 
 def download_image(image):
