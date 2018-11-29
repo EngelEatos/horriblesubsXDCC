@@ -12,7 +12,7 @@ class IrcSettingsLoader(JsonLoader):
     def create_config(self):
         self.json_data = {"irc":
                           {"host": "irc.rizon.net", "port": 6667, "channel": "#horriblesubs",
-                           "user": "engeleatosbot2", "default_bot": "CR-RALEIGH|NEW",
+                           "user": "bot123", "default_bot": "CR-RALEIGH|NEW",
                            "default_res": "720p", "anime_folder": "/mnt/media/airing/",
                            "multiprocessing": 0}}
         self.save()
