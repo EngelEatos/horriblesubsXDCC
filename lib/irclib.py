@@ -17,11 +17,11 @@ class IrcLib(Thread):
     """IrcLib"""
     ee = EventEmitter()
 
-    def __init__(self, isl, queue_in, queue_out):
+    def __init__(self, irc_config, queue_in, queue_out):
         Thread.__init__(self)
         self.logger = logging.getLogger(__name__)
         self.socket = socket.socket()
-        self.serverinfo = isl.get_serverinfo()
+        self.serverinfo = irc_config
         self.queue_in = queue_in
         self.queue_out = queue_out
         self.active = False
