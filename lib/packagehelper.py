@@ -1,84 +1,46 @@
 """packagehelper"""
-from random import randint
+from random import choice
 
-
-def get_episode_package(packages, episode, default_bot):
-    """get availible package of episode, first default then random"""
-    (result, version_result) = get_packages_by_ep(packages, episode)
-    packages = get_latest_packages(
-        version_result) if version_result else result
-    return get_packages(packages, default_bot)
-
-
-def get_packages(packages, default_bot):
-    """get matching package"""
-    selected = []
-    for package in packages:
-        if package["bot"] == default_bot:
-            return package
-        else:
-            selected.append(package)
-    return selected[randint(0, len(selected) - 1)]
-
-
-def get_latest_packages(version_result):
-    """return latest package, use versioning"""
-    packs = []
-    version_max = 0
-    for result in version_result:
-        version = int(result["version"][1:])
-        if version < version_max:
-            continue
-        if version > version_max:
-            packs.clear()
-            version_max = version
-        packs.append(result)
-    return packs
-
-
-def get_packages_by_ep(packages, episode):
-    """return package by episode number"""
-    result = []
-    version_result = []
-    for package in packages:
-        if package["episode"] == episode:
-            if package["version"]:
-                version_result.append(package)
-            else:
-                result.append(package)
-    return (result, version_result)
-
+def get_best_package(packages, episode, ranking):
+    """get best package by bot ranking or random"""
+    for bot in ranking:
+        for package in packages[episode]:
+            if package["bot"] == bot:
+                return package
+    return choice(packages[episode])
 
 def get_diff_episodes(packages, local):
     """return the difference between the folder of packages and local"""
     result = []
-    local_eps = [l[0]["episode"] for l in local]
-    packages = distinct_packages(packages)
+    packages = get_ep_size_tuple(packages)
     for package in packages:
-        episode = package["episode"]
-        size = int(package["size"])
-        if episode in local_eps:
-            local_size = int(get_size(local, episode) / (1024 * 1024))
+        episode = package[0]
+        size = int(package[1])
+        if episode in local:
+            local_size = int(local[episode][0]["size"] / (1024 * 1024))
             if size - 5 <= local_size <= size + 5:
                 continue
         result.append(episode)
-    return result
+    return sorted(result)
 
 
-def distinct_packages(packages):
-    """return a distinct list of the packages"""
-    result = []
-    eps = []
+def get_ep_size_tuple(packages):
+    """return a list of (ep, size) of the packages"""
+    return list(set([ (ep, packages[0]["size"]) for ep, packages in packages.items()]))
+
+
+def group_by_ep(packages):
+    """groups packages by id as dict and filter only latest versions"""
+    result = {}
     for package in packages:
-        if package["episode"] not in eps:
-            eps.append(package["episode"])
-            result.append(package)
+        if package["episode"] not in result:
+            result[package["episode"]] = []
+        result[package["episode"]].append(package)
+    # remove lower version
+    for ep, packages in result.items():
+        version = max([v["version"][1:] for v in packages])
+        if not version:
+            continue
+        filtered = list(filter(lambda item: item["version"][1:] == version, packages))
+        result[ep] = filtered
     return result
-
-
-def get_size(local, episode):
-    """return the size of ep in local episodes"""
-    for local_ep in local:
-        if local_ep[0]["episode"] == episode:
-            return local_ep[1]
-    return -1

@@ -10,11 +10,8 @@ import colorama
 from tabulate import tabulate
 from termcolor import colored
 
-
-from configloader.animesettingsloader import AnimeSettingsLoader
 from lib.irclib import IrcLib
-from configloader.ircsettingsloader import IrcSettingsLoader
-from lib.packagehelper import get_diff_episodes, get_episode_package
+from lib.packagehelper import get_diff_episodes, get_best_package, group_by_ep
 from lib.tcpdownloader import tcpdownload, tcpdownload_one
 from lib.xdccparser import parse_name, search
 from lib.configloader import configloader
@@ -27,7 +24,6 @@ CONFIG = configloader()
 
 def get_local_episodes(anime_folder, name):
     """return a list of files of a anime-folder inside ANIME_FOLDER"""
-    
     episodes = []
     path = os.path.join(anime_folder, name)
     if not os.path.isdir(path):
@@ -37,8 +33,8 @@ def get_local_episodes(anime_folder, name):
         ep_path = os.path.join(path, episode)
         if os.path.isfile(ep_path):
             anime = parse_name(episode)
-            file_size = os.stat(ep_path).st_size
-            episodes.append([anime, file_size])
+            anime["size"] = os.stat(ep_path).st_size
+            episodes.append(anime)
     return episodes
 
 
@@ -62,15 +58,14 @@ def check_animes(animes, irc_config):
     result = []
     table_data = []
     for idx, show in enumerate(animes):
-        packages = search(show, irc_config["default_res"])
-        local = get_local_episodes(irc_config["anime_folder"], show)
+        packages = group_by_ep(search(show, irc_config["default_res"]))
+        local = group_by_ep(get_local_episodes(irc_config["anime_folder"], show))
         diff = get_diff_episodes(packages, local)
         if diff:
             table_data.append([idx + 1, show, colored(str(diff), 'red')])
             for episode in diff:
                 delete_local_episodes(irc_config["anime_folder"], show, episode)
-                package = get_episode_package(
-                    packages, episode, irc_config["default_bot"])
+                package = get_best_package(packages, episode, irc_config["bot_ranking"])
                 result.append(package)
         else:
             table_data.append(
@@ -103,10 +98,10 @@ def boot_up(anime_folder):
     else:
         print(
             colored(">[ configs failed to load. Exit ]<\n", "red").center(80))
-        sys.exit(1)
+        exit(1)
     if not os.path.isdir(anime_folder):
         print(colored("anime folder not found: {}".format(anime_folder), "red"))
-        sys.exit(1)
+        exit(1)
 
 
 def setup_irc():
@@ -128,6 +123,8 @@ def main():
    
     if len(animes) <= 0:
         print("no subscribed animes. 'python sub_gui.py' for gui or animes.json")
+        exit(1)
+    # animes = ["Zero kara Hajimeru Mahou no Sho"]
     data = check_animes(animes, CONFIG.get_irc())
     if not data:
         print(colored("<] nothing to do. [>\n", "green").center(80))

@@ -8,7 +8,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 def download(item, irc_queue_in, irc_queue_out):
@@ -44,8 +44,7 @@ def tcpdownload(irc_queue_in, irc_queue_out, data):
             'unit_scale': True,
             'leave': True
         }
-
-        for future in tqdm(as_completed(futures), **kwargs):
+        for _future in tqdm(as_completed(futures), **kwargs):
             pass
 
 
