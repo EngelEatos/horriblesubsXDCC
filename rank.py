@@ -1,11 +1,11 @@
-from lib.configloader import configloader
+from lib.ircsettingsloader import IrcSettingsLoader
 import multiprocessing as mp
 from lib.irclib import IrcLib
 import time
 import socket
 
 bots = ["Ginpachi-Sensei", "CR-RALEIGH|NEW", "CR-HOLLAND|NEW", "CR-BATCH|720p", "CR-ARCHIVE|720p", "ARUTHA-BATCH|720p"]
-CONFIG = configloader()
+ISL = IrcSettingsLoader()
 
 
 def measure(irc_queue_in, irc_queue_out, data):
@@ -49,15 +49,13 @@ def setup_irc(k):
 def save_result(r):
     ranking = [x[3] for x in sorted(r, reverse=True)]
     print("result: {}".format(ranking))
-    config = CONFIG.get_irc()
-    config["bot_ranking"] = ranking
-    CONFIG.save()
+    ISL.set_bot_ranking(ranking)
+    ISL.save()
 
 if __name__ == '__main__':
     mp.freeze_support()
-    k = CONFIG.get_irc()
-    irc_queue_in, irc_queue_out = setup_irc(k)
-    data = [{"bot": bot, "package_nr" : 2, "name": "test"} for bot in bots]
+    irc_queue_in, irc_queue_out = setup_irc(ISL)
+    data = [{"bot": bot, "package_nr" : 1, "name": "test"} for bot in bots]
     s = measure(irc_queue_in, irc_queue_out, data)
     irc_queue_in.put("exit")
     

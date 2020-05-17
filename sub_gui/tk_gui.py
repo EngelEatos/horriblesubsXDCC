@@ -2,7 +2,7 @@
 import tkinter as tk
 from datetime import datetime
 
-from configloader.animesettingsloader import AnimeSettingsLoader
+from lib.animesettingsloader import AnimeSettingsLoader
 
 CHECKVAR = dict()
 ROOT = tk.Tk()

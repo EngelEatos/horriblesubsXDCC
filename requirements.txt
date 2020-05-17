@@ -1,8 +1,8 @@
-colorama==0.4.0
-tqdm==4.28.1
-pyee==5.0.0
-requests==2.20.1
-cfscrape==1.9.5
+colorama==0.4.3
+tqdm==4.46.0
+pyee==7.0.2
+requests==2.23.0
+cfscrape==2.1.1
 termcolor==1.1.0
-tabulate==0.8.2
-beautifulsoup4==4.6.3
+tabulate==0.8.7
+beautifulsoup4==4.9.1

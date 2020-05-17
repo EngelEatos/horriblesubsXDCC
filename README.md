@@ -21,7 +21,8 @@
         "host": "irc.rizon.net",
         "multiprocessing": 0,
         "port": 6667,
-        "user": "bot123"
+        "user": "bot123",
+        "bot_ranking": ["CR-RALEIGH|NEW", "Ginpachi-Sensei", "CR-HOLLAND|NEW", "CR-BATCH|720p", "CR-ARCHIVE|720p", "ARUTHA-BATCH|720p"]
     }
 }
 ```
@@ -46,9 +47,3 @@
     }
 }
 ```
-## Todo
-
-- [ ] add gui for config generation
-- [ ] add gui for horriblesubs.py
-- [ ] choose bot with best connection(?)
-- [ ] make configloader easier

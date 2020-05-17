@@ -5,9 +5,10 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-from animeinfo import AnimeInfo
-from lib.configloader import configloader
+from lib.animeinfo import AnimeInfo
+from lib.animesettingsloader import AnimeSettingsLoader
 
+ANIME_LOADER = AnimeSettingsLoader()
 
 class AnimeInfoWindow(Gtk.Dialog):
     """gtk3 dialog"""
@@ -156,11 +157,10 @@ def check_expired(date):
 
 def main():
     """main"""
-    anime_config = configloader().get_animes()
-    modified_date = anime_config["modified_date"]
+    modified_date = ANIME_LOADER.get_modified_date()
     if check_expired(modified_date):
-        anime_loader.update()
-    win = SubWindow(anime_config)
+        ANIME_LOADER.update()
+    win = SubWindow(ANIME_LOADER)
     win.connect("delete-event", Gtk.main_quit)
     win.show_all()
     Gtk.main()

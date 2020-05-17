@@ -17,11 +17,11 @@ class IrcLib(Thread):
     """IrcLib"""
     ee = EventEmitter()
 
-    def __init__(self, irc_config, queue_in, queue_out):
+    def __init__(self, isl, queue_in, queue_out):
         Thread.__init__(self)
         self.logger = logging.getLogger(__name__)
         self.socket = socket.socket()
-        self.serverinfo = irc_config
+        self.serverinfo = isl.get_serverinfo()
         self.queue_in = queue_in
         self.queue_out = queue_out
         self.active = False
@@ -87,8 +87,13 @@ class IrcLib(Thread):
         # msg_matches[1][msg_matches[1].find('!') + 1:]
         filename = filename[1:-1] if '"' in filename else filename
         host = str(ipaddress.ip_address(int(host)))
-        download_path = os.path.join(
-            self.serverinfo['anime_folder'], parse_name(filename)["anime"], filename)
+        parsed = parse_name(filename)
+        if not parsed:
+            print(f"failed to determine anime of {filename} saving to {self.serverinfo['anime_folder']}")
+            download_path = os.path.join(self.serverinfo['anime_folder'], filename)
+        else:
+            download_path = os.path.join(
+                self.serverinfo['anime_folder'], parse_name(filename)["anime"], filename)
         #print("%s %s %s %s" % (host, port, filename, size))
         self.queue_out.put([(host, int(port)), int(size), download_path])
 
