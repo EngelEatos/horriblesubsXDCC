@@ -23,7 +23,7 @@ def search(anime, default_res):
         matches = re.match(
             r'^p.k\[\d+\]\s=\s\{b:.(.+?).,\sn:(\d+),\ss:(\d+),\sf:.(.+?).\};', line)
         parsed_name = parse_name(matches[4])
-        if not parsed_name:
+        if not parsed_name or parsed_name['anime'] != anime:
             continue
         package['bot'] = matches[1]
         package['package_nr'] = matches[2]
