@@ -27,6 +27,7 @@ ASL = AnimeSettingsLoader()
 def get_local_episodes(anime_folder, name):
     """return a list of files of a anime-folder inside ANIME_FOLDER"""
     episodes = []
+    name = name.replace("'", "_")
     path = os.path.join(anime_folder, name)
     if not os.path.isdir(path):
         os.makedirs(path)
