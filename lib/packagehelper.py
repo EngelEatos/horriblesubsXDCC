@@ -18,7 +18,7 @@ def get_diff_episodes(packages, local):
         size = int(package[1])
         if episode in local:
             local_size = int(local[episode][0]["size"] / (1024 * 1024))
-            if size - 5 <= local_size <= size + 5:
+            if (size - 45) <= local_size <= (size + 45):
                 continue
         result.append(episode)
     return sorted(result)
