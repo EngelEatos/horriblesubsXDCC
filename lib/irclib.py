@@ -195,7 +195,7 @@ class IrcLib(Thread):
         while True:
             if not self.active:
                 break
-            data = self.socket.recv(2048).decode('utf-8')
+            data = self.socket.recv(2048).decode('ISO-8859-1')
             if not data:
                 continue
             self.ee.emit('irclib.socket.data', self, data)
